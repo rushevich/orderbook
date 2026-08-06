@@ -13,7 +13,7 @@ jobs:
           sudo apt-get install g++-15
       - name: Configure
         env:
-          CXX: g++15
+          CXX: g++-15
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
