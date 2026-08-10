@@ -7,18 +7,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update / install build-essential
+      - name: Add Toolchain PPA and install GCC 15
         run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y gcc-15 g++-15 build-essential
           
-      - name: Verify build-essential
+      - name: Verify g++-15
         run: |
-          g++ --version
+          g++-15 --version
           make --version
           cmake --version
           
       - name: Configure
+        env:
+          CC: gcc-15
+          CXX: g++-15
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
