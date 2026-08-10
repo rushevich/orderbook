@@ -1,22 +1,33 @@
-#include <print>
 #include <optional>
+#include <print>
 
-using return_type = std::optional<int *>;
+// trivial example to test CI
+class Base {
+public:
+    virtual void print() const {
+        std::println("Base::print()");
+    }
+    virtual ~Base() = default;
+};
 
-auto goofy_function() -> return_type {
-  int *heap_allocated_int{new int{69}};
-  if (heap_allocated_int != nullptr) {
-      return heap_allocated_int;
-  }
-  return {}; // nullopt
-}
+class Derived : public Base {
+    void print() const override {
+        std::println("Derived::print()");
+    }
+};
 
 int main() {
-  std::println("Hello world!");
-  auto heap_ptr{goofy_function()};
-  if (heap_ptr.has_value()) {
-    delete *heap_ptr;
-    std::println("Memory has been cleaned up!");
-  }
-  return 0;
+    {
+        Base* b_obj = new Base {};
+        std::println("Invoking Base::print():");
+        b_obj->print();
+        delete b_obj;
+    }
+    {
+        Base* d_obj = new Derived {};
+        std::println("Invoking Derived::print():");
+        d_obj->print();
+	delete d_obj;
+    }
+    return 0;
 }

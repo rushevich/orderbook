@@ -19,4 +19,3 @@ SpaceAfterCStyleCast: true
 Cpp11BracedListStyle: false
 SpaceBeforeCpp11BracedList: true
 Standard: c++20
----
