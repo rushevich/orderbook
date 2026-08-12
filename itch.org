@@ -1,0 +1,38 @@
+#+TITLE: Notes on the ITCH 5.0 Message Spec
+#+AUTHOR: George Rushevich
+
+* Broad Overview
+ITCH 5.0 is a feed offered by the NASDAQ stock market
+
+Life of a customer order is tracked entirely through the ITCH messaging system.
+
+In general, there are 5 types of messages that are produced by the ITCH messaging system:
+- Order level data with attribution :: full order depth -> effectively the full lifetime of outbound market data for any given asset
+- Trade messages :: messages reflecting a match of a non-displayable order. This is important to process to maintain an updated view of the book.
+- Net Order Imbalance Data :: Advertises both the net order imbalance and indicative clearing price. This refers to the total count of unmatched orders and trump price, respectively
+- Administrative messages:
+  + Trading action messages :: informs market participants when a security is halted/paused/released for trading
+  + Symbol directory messages :: basic security data like market tier, financial status indicator
+  + Market participant position messages :: carries info like the primary market maker status, market participant status, and market maker mode fields (used by some firms to comply with market regulations)
+- Event controls :: start of day, end of day, emergency market halting and resuming
+
+* Message & Delivery Architecture
+Messages are obtainable in one of three protocol options:
+1. SoupbinTCP
+2. Compressed via SoupBinTCP
+3. MoldUDP64 (perhaps this is the most optimal, however this may be a bit outside of scope)
+
+In messages, there is such thing as a *stock locate code*, which is a low lying integer that is provided with the intent of serving as an array index for looking up an instrument. Practically speaking, this is the identifier for which orderbook we are referring to.
+
+The stock locate codes are dynamically assigned each day.
+
+* Data Types
+Integer fields within messages are all NBO and to be treated as unsigned unless otherwise specified.
+
+Alpha (character fields) are ASCII and left justified + padded with spaces.
+
+Prices are integer fields that are supplied with an associated precision. The resulting price is a fixed point number that has the specified amount of precision (e.g. Price (4) is a price field with 4 decimal places. The max value of such a field is 200,000.0000
+
+Timestamps are represented as nanoseconds since midnight.
+
+* Message Formats

@@ -12,11 +12,11 @@ numbers), not raw cleverness.
 
 ## Phase 0 — Foundation & Tooling
 
-- [ ] CMake project targeting C++23 (`CMAKE_CXX_STANDARD 23`)
-- [ ] GitHub Actions CI (build + test on push)
+- [x] CMake project targeting C++23 (`CMAKE_CXX_STANDARD 23`)
+- [x] GitHub Actions CI (build + test on push)
 - [ ] Sanitizer build configs: ASan, UBSan, TSan
 - [ ] `clang-tidy` + `clang-format` configured and enforced in CI
-- [ ] Unit test framework wired in (Catch2 or GoogleTest)
+- [x] Unit test framework wired in (Catch2 or GoogleTest)
 - [ ] Benchmark harness wired in (Google Benchmark)
 - [ ] Document target machine characteristics (cache sizes, core topology, CPU model)
 - [ ] Establish a `perf` workflow (stat/record/report) and confirm it runs
@@ -35,7 +35,7 @@ benchmark and a trivial test both run.
 - [ ] Parse core message types: Add, Cancel, Delete, Replace, Execute
 - [ ] Correctness check: parse full sample file, tally message-type counts, validate against known totals
 
-**Exit criteria:** the sample feed parses cleanly end-to-end with a validated
+	**Exit criteria:** the sample feed parses cleanly end-to-end with a validated
 per-message-type histogram.
 
 ---
