@@ -18,6 +18,8 @@
 #include <cstdint>
 #include <flat_map>
 #include <string_view>
+#include <vector>
+#include <cassert>
 
 namespace parser {
 
@@ -44,17 +46,6 @@ enum class Price : uint32_t {};
 // time of receiving the order then later on, when we seek to get history of the orderbook during
 // runtime, we can dump the orders using reflection and the id from the logbook (we will keep our
 // orders around to form a graveyard)
-
-struct AddOrder {
-    OrderID oid {};          // 64 bit unsigned integer
-    Quantity qty {};         // 32 bit unsigned integer
-    Price price {};          // 32 bit unsigned integer
-    InstrumentID book_id {}; // 16 bit unsigned integer. this is an ID that corresponds to an
-                             // instance of an orderbook
-    Type type {};            // bool -> buy or sell
-};
-
-// ModifyOrder replace will be separate from all others since the processing is distinct enough
 
 template <size_t B> constexpr uint64_t parse_uint(std::string_view str);
 
@@ -130,30 +121,52 @@ struct OrderReplace {
 using Action =
     std::variant<std::monostate, OrderAdd, OrderExecute, OrderCancel, OrderDelete, OrderReplace>;
 
-// Function declarations for internal parse-handling
-auto parse_add(std::string_view message, Action a_buf = Action {}) -> void;
-auto parse_execute(std::string_view message, Action a_buf = Action {}) -> void;
-auto parse_cancel(std::string_view message, Action a_buf = Action {}) -> void;
-auto parse_delete(std::string_view message, Action a_buf = Action {}) -> void;
-auto parse_replace(std::string_view message, Action a_buf = Action {}) -> void;
+// Function declarations for internal parse-handling:
+auto parse_add(std::span<std::byte> msg) -> Action;
+auto parse_execute(std::span<std::byte> msg) -> Action;
+auto parse_cancel(std::span<std::byte> msg) -> Action;
+auto parse_delete(std::span<std::byte> msg) -> Action;
+auto parse_replace(std::span<std::byte> msg) -> Action;
+
+using ParsingFunction = std::function<Action(std::span<std::byte> msg)>;
 
 // While the out parameter seems like a poor choice, it permits bypassing branches and instead using
 // a lookup table
-// From ITCH 5.0 Spec:
-// A: add order, no MPID (market participant ID)
-// F: add order, MPID present
-// E: order execute
-// C: order exectute with price
-// X: order cancel
-// D: order delete
-// U: order replace
-static const std::unordered_map<char, std::function<void(std::string_view message, Action)>>
-    parse_map { { 'A', parse_add },     { 'F', parse_add },    { 'E', parse_execute },
-                { 'C', parse_execute }, { 'X', parse_cancel }, { 'D', parse_delete },
-                { 'U', parse_add } };
+// we get the function, then call using the correct offsets / bounds for the string_view
+// e.g. parse_map('A')({message.begin() + current_start, message.begin() + current_start +
+// parse_add_offset});
+static const std::unordered_map<char, ParsingFunction> parse_map {
+    { 'A', parse_add },    { 'F', parse_add },    { 'E', parse_execute }, { 'C', parse_execute },
+    { 'X', parse_cancel }, { 'D', parse_delete }, { 'U', parse_add }
+};
 
-auto parse_message(std::string_view msg) {
-    
+constexpr bool valid_identifier(char c) {
+    return c == 'A' || c == 'F' || c == 'E' || c == 'C' || c == 'X' || c == 'D' || c == 'U';
 }
 
+class Parser {
+public:
+    // Parses the arbitrary size message and outputs a collection of actions to perform
+    // TODO: ensure that we can elide the move / copy
+    static Action parse(std::span<std::byte> msg);
+
+private:
+    // Count of messages that have been parsed so far
+    size_t _count {};
+};
+// This operates on the assumption that msg consists of one binary message. we will depend on the
+// reader to maintain this
+    // Later on we can use contracts
+ Action Parser::parse(std::span<std::byte> msg) {
+    assert(msg.size() > 0 && valid_identifier(static_cast<char>(msg[0])));
+
+    const auto parsing_function = parse_map.at(static_cast<char>(msg[0]));
+    return parsing_function(msg); // the parsing functions will encpasulate all the offset logic so we do not crowd namespaces
+    }
+
 } // namespace parser
+
+// The idea:
+// auto actions = parser.parse(message) (arbitrary size message)
+// std::visit(actions);
+//
