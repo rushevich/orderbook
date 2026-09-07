@@ -1,21 +1,19 @@
 ---
-Language: Cpp
-BasedOnStyle: LLVM
-IndentWidth: 4
-TabWidth: 4
-UseTab: Never
-ColumnLimit: 100
-AccessModifierOffset: -4
-PointerAlignment: Left
-ReferenceAlignment: Left
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
-BreakBeforeBraces: Attach
-NamespaceIndentation: None
-SortIncludes: true
-IncludeBlocks: Regroup
-SpaceAfterCStyleCast: true
-Cpp11BracedListStyle: false
-SpaceBeforeCpp11BracedList: true
-Standard: c++20
+  BasedOnStyle: LLVM
+  AccessModifierOffset: '-4'
+  AlignTrailingComments: 'true'
+  AllowAllParametersOfDeclarationOnNextLine: 'false'
+  BreakTemplateDeclarations: No
+  BreakBeforeBraces: Attach
+  ColumnLimit: '100'
+  IncludeBlocks: Regroup
+  IndentPPDirectives: AfterHash
+  IndentWidth: 4
+  NamespaceIndentation: None
+  BreakBeforeBinaryOperators: All
+  BreakBeforeTernaryOperators: true
+  Cpp11BracedListStyle: false
+  SpaceBeforeCpp11BracedList: true
+  PointerAlignment: Left
+  PackConstructorInitializers: CurrentLine
+...

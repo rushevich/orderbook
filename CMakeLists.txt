@@ -1,31 +1,47 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 project(orderbook LANGUAGES CXX)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# ---------- Project ----------
+option(ORDERBOOK_BUILD_TESTS "Build unit tests" ON)
+option(ORDERBOOK_BUILD_BENCHMARKS "Build benchmarks" ON)
+
+# ---------- Common flags ----------
+add_library(orderbook_warnings INTERFACE)
+target_compile_options(orderbook_warnings INTERFACE
+  -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
+# ---------- Core library ----------
+add_library(orderbook_core
+  parser.cpp
+)
+target_include_directories(orderbook_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(orderbook_core PRIVATE orderbook_warnings)
+
+# ---------- Executable ----------
 add_executable(orderbook main.cpp)
-
-target_compile_options(orderbook PUBLIC -Wall -Wextra -Wpedantic)
-# -----------------------------
+target_link_libraries(orderbook PRIVATE orderbook_core orderbook_warnings)
 
 # ---------- Tests ----------
-Include(FetchContent)
-FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.15.3
-)
+if(ORDERBOOK_BUILD_TESTS)
+  find_package(GTest REQUIRED)
+  enable_testing()
+  include(GoogleTest)
 
-FetchContent_MakeAvailable(Catch2)
+  add_executable(orderbook_tests test.cpp)
+  target_link_libraries(orderbook_tests
+    PRIVATE orderbook_core orderbook_warnings GTest::gtest_main)
+  gtest_discover_tests(orderbook_tests)
+endif()
 
-add_executable(tests test.cpp)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+# ---------- Benchmarks ----------
+if(ORDERBOOK_BUILD_BENCHMARKS)
+  find_package(benchmark REQUIRED)
 
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-include(CTest)
-include(Catch)
-catch_discover_tests(tests)
-# ---------------------------
+  add_executable(orderbook_bench bench.cpp)
+  target_link_libraries(orderbook_bench
+    PRIVATE orderbook_core orderbook_warnings benchmark::benchmark_main)
+endif()

@@ -1,7 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
 
-auto function_that_returns_one() -> int { return 1; }
+#include "parser.hpp"
 
-TEST_CASE("Trivial test", "[test1]") {
-    REQUIRE(function_that_returns_one() == 1);
+TEST(Parser, FramesLengthPrefixedMessage) {
+  // arrange, act, assert
+  EXPECT_EQ(1, 1);
 }

@@ -1,0 +1,140 @@
+#+TITLE: ITCH Order Book Engine Roadmap
+#+AUTHOR: George Rushevich
+#+STARTUP: showeverything
+
+Guiding principle: correctness before speed, measurement before optimization.
+The value is the iteration story (baseline, profiled, optimized with numbers),
+not raw cleverness.
+
+* Phase 0: Foundation and Tooling [1/4]
+
+** DONE Deliverable 0.1: Project and CI bootstrap [2/2]
+CLOSED: [2026-09-06 Sun]
+- [X] Define the CMake project with ~CMAKE_CXX_STANDARD 23~ and strict warning flags.
+- [X] Configure GitHub Actions to build and run tests on every push.
+
+** TODO Deliverable 0.2: Test and benchmark harness [1/3]
+- [X] Wire in a unit test framework (GTest or Catch2) with CTest discovery.
+- [ ] Wire in Google Benchmark as a separate target.
+- [ ] Confirm a trivial test and a trivial benchmark both build and run.
+
+** TODO Deliverable 0.3: Sanitizers and static analysis [0/2]
+- [ ] Add ASan, UBSan, and TSan build configurations.
+- [ ] Enforce ~clang-tidy~ and ~clang-format~ in CI.
+
+** TODO Deliverable 0.4: Measurement environment [0/2]
+- [ ] Document target machine characteristics: CPU model, cache sizes, core topology.
+- [ ] Establish a ~perf~ workflow (~stat~, ~record~, ~report~) and confirm it runs.
+
+* Phase 1: ITCH Parsing [0/3]
+
+** TODO Deliverable 1.1: Feed acquisition [0/2]
+- [ ] Obtain the NASDAQ TotalView-ITCH 5.0 specification.
+- [ ] Obtain a sample data file with known message counts for validation.
+
+** TODO Deliverable 1.2: Framing and decode layer [0/5]
+- [ ] Implement message framing over the 2-byte big-endian length prefix.
+- [ ] Handle endianness conversion via ~std::byteswap~.
+- [ ] Interpret packed message structs zero-copy over the buffer using ~std::span~ and ~std::bit_cast~.
+- [ ] Parse the core message types: Add, Cancel, Delete, Replace, Execute.
+- [ ] Return ~std::expected<T, ParseError>~ from all decode entry points.
+
+** TODO Deliverable 1.3: Parser validation [0/2]
+- [ ] Parse the full sample file end to end without error.
+- [ ] Tally a per-message-type histogram and validate it against known totals.
+
+* Phase 2: Core Order Book (correctness first) [0/3]
+
+** TODO Deliverable 2.1: Price level model [0/2]
+- [ ] Model each price level as a FIFO queue preserving price-time priority.
+- [ ] Implement top-of-book queries for best bid, best ask, and level sizes.
+
+** TODO Deliverable 2.2: Message application [0/2]
+- [ ] Apply Add, Cancel, Delete, Replace, and Execute against the book.
+- [ ] Maintain an order ID to location map for O(1) cancel and modify.
+
+** TODO Deliverable 2.3: Reconstruction validation [0/2]
+- [ ] Reconstruct the book from the sample ITCH feed.
+- [ ] Compare top-of-book snapshots against reference data. No optimization yet.
+
+* Phase 3: Data Structure Design [0/3]
+
+** TODO Deliverable 3.1: Naive baseline [0/2]
+- [ ] Implement the book over ~std::map<Price, Level>~ as something to beat.
+- [ ] Benchmark the baseline and record the numbers.
+
+** TODO Deliverable 3.2: Hand-rolled structure [0/3]
+- [ ] Implement a dense array indexed by price ticks covering the hot region.
+- [ ] Implement intrusive linked lists for the per-level order queues.
+- [ ] Add free-list or pooled allocation for order nodes.
+
+** TODO Deliverable 3.3: Comparative analysis [0/2]
+- [ ] Benchmark the hand-rolled structure against the map baseline and record the delta.
+- [ ] Write up the tradeoff: sorted map (log n, cache-unfriendly) vs array of levels (O(1) index, memory cost, requires bounded and normalized prices).
+
+* Phase 4: Benchmarking and Profiling Discipline [0/3]
+
+** TODO Deliverable 4.1: Throughput and latency measurement [0/2]
+- [ ] Implement an end-to-end throughput benchmark in messages per second.
+- [ ] Report per-operation latency distributions at p50, p99, and p99.9 rather than means.
+
+** TODO Deliverable 4.2: Hardware counter analysis [0/2]
+- [ ] Collect ~perf stat~ output for cache misses, branch mispredicts, and IPC.
+- [ ] Use ~perf record~ and ~perf report~ to locate hot spots.
+
+** TODO Deliverable 4.3: Baseline log [0/1]
+- [ ] Commit a reproducible benchmark log establishing the pre-optimization baseline.
+
+* Phase 5: Optimization Passes [0/4]
+
+Only optimize what Phase 4 flagged.
+
+** TODO Deliverable 5.1: Memory strategy [0/1]
+- [ ] Introduce custom allocators, object pools, and arena allocation where profiling justifies it.
+
+** TODO Deliverable 5.2: Layout tuning [0/3]
+- [ ] Apply cache-line alignment and pack structs to shrink footprint.
+- [ ] Evaluate SoA vs AoS for level data.
+- [ ] Audit for false sharing before any threading work begins.
+
+** TODO Deliverable 5.3: Hot path tuning [0/2]
+- [ ] Reduce branches in the hot path and apply branchless updates where measurable.
+- [ ] Add prefetching only where profiling justifies it.
+
+** TODO Deliverable 5.4: Regression discipline [0/1]
+- [ ] Re-benchmark after every pass and keep only measured wins.
+
+* Phase 6: Multithreading [0/3]
+
+Last, and only if it measurably helps.
+
+** TODO Deliverable 6.1: Parallelism model [0/1]
+- [ ] Document the constraint that matching is sequential per symbol, and choose between partitioning by symbol or splitting parse/decode from matching.
+
+** TODO Deliverable 6.2: SPSC handoff [0/1]
+- [ ] Implement a lock-free single-producer single-consumer ring buffer for the parser to matcher handoff.
+
+** TODO Deliverable 6.3: Memory model and verdict [0/2]
+- [ ] Study ~std::atomic~ ordering: acquire/release semantics and why ~seq_cst~ is rarely needed here.
+- [ ] Benchmark threaded vs single-threaded and keep the threaded version only if it wins.
+
+* Phase 7: Resume Polish [0/2]
+
+** TODO Deliverable 7.1: README [0/1]
+- [ ] Write an architecture diagram, benchmark numbers, and design rationale a stranger can follow.
+
+** TODO Deliverable 7.2: History and write-up [0/2]
+- [ ] Keep a clean commit history showing the baseline to optimized progression.
+- [ ] Write up the key engineering decisions and their measured impact.
+
+* Reference: C++23 feature targets
+
+Concrete places to apply modern standards, so it is not C++23 in name only.
+
+- ~std::byteswap~: endianness handling in the parser.
+- ~std::bit_cast~: safe reinterpretation of packed message structs.
+- ~std::span~: non-owning views over the feed buffer.
+- ~std::mdspan~: candidate for level and depth data from Phase 3 onward.
+- ~std::expected~: parser and validation error handling.
+- ~constexpr~ / ~consteval~: compile-time message layout tables.
+- Ranges: validation and analysis tooling, kept out of the hot path unless measured.
