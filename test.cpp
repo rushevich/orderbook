@@ -1,8 +1,8 @@
-#include <gtest/gtest.h>
-
 #include "parser.hpp"
 
-TEST(Parser, FramesLengthPrefixedMessage) {
-  // arrange, act, assert
-  EXPECT_EQ(1, 1);
+#include <gtest/gtest.h>
+
+TEST(Parser, FramesLen) {
+    // arrange, act, assert
+    EXPECT_EQ(1, 1);
 }
