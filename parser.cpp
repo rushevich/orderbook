@@ -8,13 +8,13 @@ namespace parser {
 //     InstrumentID locate {};
 //     Type type {};
 // };
-using namespace detail;
+namespace detail {
 Action parse_add(std::span<const std::byte> msg) {
     return OrderAdd { .oid = OrderID { parse_be<8>(msg, 11) },
-                      .qty = Quantity { parse_be<4>(msg, 19) },
+                      .qty = Quantity { parse_be<4>(msg, 20) },
                       .price = Price { parse_be<4>(msg, 32) },
                       .locate = InstrumentID { parse_be<2>(msg, 1) },
-                      .type = Type { static_cast<char>(msg[19]) == 'B' ? Type::buy : Type::sell } };
+                      .type = static_cast<char>(msg[19]) == 'B' ? Type::buy : Type::sell };
 }
 
 // struct OrderExecute {
@@ -61,4 +61,20 @@ Action parse_replace(std::span<const std::byte> msg) {
                           .new_price = Price { parse_be<4>(msg, 31) },
                           .locate = InstrumentID { parse_be<2>(msg, 1) } };
 }
+} // namespace detail
+[[nodiscard]] std::expected<Action, ParseError>
+Parser::parse(std::span<const std::byte> msg) noexcept {
+    if (msg.empty()) {
+        return std::unexpected { ParseError::empty };
+    }
+    const auto identifier = std::to_integer<uint8_t>(msg[0]);
+    const auto func = detail::parse_lut[identifier];
+    if (func == nullptr) {
+        return std::unexpected { ParseError::unknown_type };
+    }
+    _count++;
+    _by_type[identifier]++;
+    return func(msg);
+}
+
 } // namespace parser
