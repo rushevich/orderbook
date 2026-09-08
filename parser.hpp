@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <expected>
 #include <span>
-#include <system_error>
 #include <variant>
 
 namespace parser {
@@ -30,15 +29,15 @@ struct OrderAdd {
 // Executes order (reduces the quantity by executed count)
 struct OrderExecute {
     OrderID oid {};
-    InstrumentID locate {};
     Quantity executed_qty {};
+    InstrumentID locate {};
 };
 
 // Action that cancels a certain amount of shares
 struct OrderCancel {
     OrderID oid {};
-    InstrumentID locate {};
     Quantity qty {};
+    InstrumentID locate {};
 };
 
 // Deletes the order from the book (reduces the order's quantity to 0)
@@ -62,21 +61,29 @@ using Action = std::variant<OrderAdd, OrderExecute, OrderCancel, OrderDelete, Or
 
 namespace detail {
 
-template <size_t N> constexpr uint64_t parse_be(std::span<const std::byte> data, size_t offset) {
+template <size_t N> constexpr auto parse_be(std::span<const std::byte> data, size_t offset) {
     static_assert(N > 0 && N <= 8);
     uint64_t value {};
     for (size_t i {}; i < N; ++i) {
         value = (value << 8) | std::to_integer<uint64_t>(data[i + offset]);
     }
-    return value;
+    if constexpr (N == 8) {
+        return value;
+    } else if constexpr (N == 4) {
+        return static_cast<uint32_t>(value);
+    } else if constexpr (N == 2) {
+        return static_cast<uint16_t>(value);
+    } else if constexpr (N == 1) {
+        return static_cast<uint8_t>(value);
+    }
 }
 
 // Function declarations for internal parse-handling:
-auto parse_add(std::span<const std::byte> msg) -> Action;
-auto parse_execute(std::span<const std::byte> msg) -> Action;
-auto parse_cancel(std::span<const std::byte> msg) -> Action;
-auto parse_delete(std::span<const std::byte> msg) -> Action;
-auto parse_replace(std::span<const std::byte> msg) -> Action;
+Action parse_add(std::span<const std::byte> msg);
+Action parse_execute(std::span<const std::byte> msg);
+Action parse_cancel(std::span<const std::byte> msg);
+Action parse_delete(std::span<const std::byte> msg);
+Action parse_replace(std::span<const std::byte> msg);
 
 using ParsingFunction = Action (*)(std::span<const std::byte> msg);
 
@@ -94,6 +101,7 @@ inline constexpr std::array<ParsingFunction, 256> parse_lut = [] consteval {
 }();
 
 } // namespace detail
+
 enum class ParseError : uint8_t {
     empty,
     unknown_type,
@@ -106,6 +114,10 @@ public:
     // perform
     // TODO: ensure that we can elide the move / copy
     [[nodiscard]] std::expected<Action, ParseError> parse(std::span<const std::byte> msg) noexcept;
+
+    [[nodiscard]] auto count() const { return _count; }
+
+    [[nodiscard]] auto histogram() { return _by_type; }
 
 private:
     // Count of messages that have been parsed so far
