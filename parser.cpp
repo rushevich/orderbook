@@ -11,7 +11,7 @@ namespace parser {
 using namespace detail;
 Action parse_add(std::span<const std::byte> msg) {
     return OrderAdd { .oid = OrderID { parse_be<8>(msg, 11) },
-                      .qty = Quantity { parse_be<4>(msg, 11) },
+                      .qty = Quantity { parse_be<4>(msg, 19) },
                       .price = Price { parse_be<4>(msg, 32) },
                       .locate = InstrumentID { parse_be<2>(msg, 1) },
                       .type = Type { static_cast<char>(msg[19]) == 'B' ? Type::buy : Type::sell } };
