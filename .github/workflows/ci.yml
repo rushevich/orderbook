@@ -1,33 +1,26 @@
 name: CI
 on: [push, pull_request]
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Add Toolchain PPA and install GCC 15
-        run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt-get update
-          sudo apt-get install -y gcc-15 g++-15 build-essential
-          
-      - name: Verify g++-15
-        run: |
-          g++-15 --version
-          make --version
-          cmake --version
-          
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
+      - name: Compiler version
+        run: nix develop .#ci --command c++ --version
+
       - name: Configure
-        env:
-          CC: gcc-15
-          CXX: g++-15
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        run: nix develop .#ci --command cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --parallel
+        run: nix develop .#ci --command cmake --build build --parallel
 
       - name: Test
-        working-directory: build
-        run: ctest --output-on-failure
+        run: nix develop .#ci --command ctest --test-dir build --output-on-failure
