@@ -37,6 +37,9 @@ if(ORDERBOOK_BUILD_TESTS)
   gtest_discover_tests(orderbook_tests)
 endif()
 
+target_compile_definitions(orderbook_tests PRIVATE
+  ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
+
 # ---------- Benchmarks ----------
 if(ORDERBOOK_BUILD_BENCHMARKS)
   find_package(benchmark REQUIRED)

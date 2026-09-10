@@ -1,5 +1,9 @@
 #include "parser.hpp"
 
+#include <format>
+#include <iostream>
+#include <ranges>
+
 namespace parser {
 // struct OrderAdd {
 //     OrderID oid {};
@@ -67,7 +71,7 @@ Parser::parse(std::span<const std::byte> msg) noexcept {
     if (msg.empty()) {
         return std::unexpected { ParseError::empty };
     }
-    const auto identifier = std::to_integer<uint8_t>(msg[0]);
+    const auto identifier = detail::parse_be<1>(msg, 0);
     const auto func = detail::parse_lut[identifier];
     if (func == nullptr) {
         return std::unexpected { ParseError::unknown_type };
@@ -77,4 +81,38 @@ Parser::parse(std::span<const std::byte> msg) noexcept {
     return func(msg);
 }
 
+void Parser::dump_stats(std::ostream& out) {
+    std::println(out, "Total count: {}", _count);
+    for (size_t idx {}; idx < _by_type.size(); ++idx) {
+        const auto count = _by_type[idx];
+        if (count == 0) {
+            continue;
+        }
+        switch (idx) {
+        case 'F':
+            out << std::format("Order Adds (MPID): {}", count) << '\n';
+            break;
+        case 'A':
+            out << std::format("Order Adds: {}", count) << '\n';
+            break;
+        case 'C':
+            out << std::format("Order Executes (w/ price): {}", count) << '\n';
+            break;
+        case 'E':
+            out << std::format("Order Executes: {}", count) << '\n';
+            break;
+        case 'X':
+            out << std::format("Order Cancels: {}", count) << '\n';
+            break;
+        case 'D':
+            out << std::format("Order Deletes: {}", count) << '\n';
+            break;
+        case 'U':
+            out << std::format("Order Replaces: {}", count) << '\n';
+            break;
+        default:
+            out << std::format("Unregistered parsing operation??? {}", count) << '\n';
+        }
+    }
+}
 } // namespace parser

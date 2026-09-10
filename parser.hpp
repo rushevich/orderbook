@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <iostream>
 #include <span>
 #include <variant>
 
@@ -118,6 +119,9 @@ public:
     [[nodiscard]] auto count() const { return _count; }
 
     [[nodiscard]] auto histogram() { return _by_type; }
+
+    // Pass in the histogram and a desired output stream
+    void dump_stats(std::ostream& out);
 
 private:
     // Count of messages that have been parsed so far

@@ -1,10 +1,19 @@
+#include "common.hpp"
 #include "parser.hpp"
+#include "reader.hpp"
 
 #include <array>
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <print>
+#include <ranges>
 #include <utility>
 #include <variant>
+
+namespace fs = std::filesystem;
 
 // Contains names to this TU
 namespace {
@@ -157,4 +166,41 @@ TEST(Parser, ParseReplace) {
     EXPECT_EQ(std::to_underlying(rep.new_qty), 200U);
     EXPECT_EQ(std::to_underlying(rep.new_price), 567800U);
     EXPECT_EQ(std::to_underlying(rep.locate), 1234U);
+}
+
+// template <typename... Ts> struct overloaded : Ts... {
+//     using Ts::operator()...;
+// };
+// template <typename... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+// this will be needed later
+
+// This is meant to be a relatively "full" test
+// uncomment this if on local. the test will fail to compile if not local since im not pushing the
+// huge binary file to github
+TEST(Parser, ParseFile) {
+    const auto path = fs::path(ITCH_ASSET_DIR) / "ITCH_BINARY";
+    if (!fs::exists(path)) {
+        GTEST_SKIP() << "no local ITCH binary found at " << path;
+    }
+    auto file = reader::detail::MappedFile(path);
+    const auto data = file.data();
+    ASSERT_TRUE(!data.empty()); // we shouldn’t proceed if this is empty
+    parser::Parser par;
+    size_t pos { 0 };
+    const auto is_parsable
+        = [](uint8_t byte) { return parser::detail::parse_lut[byte] != nullptr; };
+    while (pos + 2 <= data.size()) {
+        const auto len = parser::detail::parse_be<2>(data, pos);
+        ASSERT_LE(pos + 2 + len, data.size());
+        const auto type = parser::detail::parse_be<1>(data, pos + 2);
+        ASSERT_EQ(len, common::message_lengths[type]);
+        if (is_parsable(type)) {
+            par.parse(file.data().subspan(pos + 2, len));
+        }
+
+        pos += 2 + len;
+    }
+    ASSERT_TRUE(!par.histogram().empty());
+    std::ofstream dump_file(fs::current_path() / "ParseFile_dump");
+    par.dump_stats(dump_file);
 }
