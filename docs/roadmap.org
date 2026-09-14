@@ -2,10 +2,6 @@
 #+AUTHOR: George Rushevich
 #+STARTUP: showeverything
 
-Guiding principle: correctness before speed, measurement before optimization.
-The value is the iteration story (baseline, profiled, optimized with numbers),
-not raw cleverness.
-
 * Phase 0: Foundation and Tooling [2/4]
 
 ** DONE Deliverable 0.1: Project and CI bootstrap [2/2]
@@ -35,7 +31,7 @@ CLOSED: [2026-09-07 Mon 22:35]
 
 ** TODO Deliverable 1.2: Framing and decode layer [0/5]
 - [ ] Implement message framing over the 2-byte big-endian length prefix.
-- [ ] Handle endianness conversion via ~std::byteswap~.
+  When we pick up messages from the wire, 
 - [ ] Interpret packed message structs zero-copy over the buffer using ~std::span~ and ~std::bit_cast~.
 - [ ] Parse the core message types: Add, Cancel, Delete, Replace, Execute.
 - [ ] Return ~std::expected<T, ParseError>~ from all decode entry points.
@@ -112,8 +108,8 @@ Last, and only if it measurably helps.
 ** TODO Deliverable 6.1: Parallelism model [0/1]
 - [ ] Document the constraint that matching is sequential per symbol, and choose between partitioning by symbol or splitting parse/decode from matching.
 
-** TODO Deliverable 6.2: SPSC handoff [0/1]
-- [ ] Implement a lock-free single-producer single-consumer ring buffer for the parser to matcher handoff.
+** TODO Deliverable 6.2: SPSC handoff [1/1]
+- [X] Implement a lock-free single-producer single-consumer ring buffer for the parser to matcher handoff.
 
 ** TODO Deliverable 6.3: Memory model and verdict [0/2]
 - [ ] Study ~std::atomic~ ordering: acquire/release semantics and why ~seq_cst~ is rarely needed here.
