@@ -187,16 +187,12 @@ TEST(Parser, ParseFile) {
     ASSERT_TRUE(!data.empty()); // we shouldn’t proceed if this is empty
     parser::Parser par;
     size_t pos { 0 };
-    const auto is_parsable
-        = [](uint8_t byte) { return parser::detail::parse_lut[byte] != nullptr; };
     while (pos + 2 <= data.size()) {
         const auto len = parser::detail::parse_be<2>(data, pos);
         ASSERT_LE(pos + 2 + len, data.size());
         const auto type = parser::detail::parse_be<1>(data, pos + 2);
         ASSERT_EQ(len, common::message_lengths[type]);
-        if (is_parsable(type)) {
-            par(file.data().subspan(pos + 2, len));
-        }
+        par(file.data().subspan(pos + 2, len));
 
         pos += 2 + len;
     }

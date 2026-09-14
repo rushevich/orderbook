@@ -57,8 +57,11 @@ struct OrderReplace {
     InstrumentID locate {};
 };
 
+struct DoNothing {};
+
 // Action can be one of the defined orders
-using Action = std::variant<OrderAdd, OrderExecute, OrderCancel, OrderDelete, OrderReplace>;
+using Action
+    = std::variant<OrderAdd, OrderExecute, OrderCancel, OrderDelete, OrderReplace, DoNothing>;
 
 namespace detail {
 
@@ -85,6 +88,7 @@ Action parse_execute(std::span<const std::byte> msg);
 Action parse_cancel(std::span<const std::byte> msg);
 Action parse_delete(std::span<const std::byte> msg);
 Action parse_replace(std::span<const std::byte> msg);
+Action parse_do_nothing(std::span<const std::byte> msg);
 
 using ParsingFunction = Action (*)(std::span<const std::byte> msg);
 
@@ -97,6 +101,22 @@ inline constexpr std::array<ParsingFunction, 256> parse_lut = [] consteval {
     arr['X'] = parse_cancel;
     arr['D'] = parse_delete;
     arr['U'] = parse_replace;
+    arr['S'] = parse_do_nothing; // System Event
+    arr['R'] = parse_do_nothing; // Stock Directory
+    arr['H'] = parse_do_nothing; // Stock Trading Action
+    arr['Y'] = parse_do_nothing; // Reg SHO Restriction
+    arr['L'] = parse_do_nothing; // Market Participant Position
+    arr['V'] = parse_do_nothing; // MWCB Decline Level
+    arr['W'] = parse_do_nothing; // MWCB Status
+    arr['K'] = parse_do_nothing; // IPO Quoting Period Update
+    arr['J'] = parse_do_nothing; // LULD Auction Collar
+    arr['h'] = parse_do_nothing; // Operational Halt
+    arr['P'] = parse_do_nothing; // Trade (non-cross)
+    arr['Q'] = parse_do_nothing; // Cross Trade
+    arr['B'] = parse_do_nothing; // Broken Trade
+    arr['I'] = parse_do_nothing; // NOII
+    arr['N'] = parse_do_nothing; // RPII
+    arr['O'] = parse_do_nothing; // Direct Listing with Capital Raise
 
     return arr;
 }();

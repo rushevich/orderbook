@@ -65,6 +65,9 @@ Action parse_replace(std::span<const std::byte> msg) {
                           .new_price = Price { parse_be<4>(msg, 31) },
                           .locate = InstrumentID { parse_be<2>(msg, 1) } };
 }
+
+Action parse_do_nothing([[maybe_unused]] std::span<const std::byte>) { return DoNothing {}; }
+
 } // namespace detail
 [[nodiscard]] std::expected<Action, ParseError>
 Parser::operator()(std::span<const std::byte> msg) noexcept {
@@ -83,8 +86,7 @@ Parser::operator()(std::span<const std::byte> msg) noexcept {
 
 void Parser::dump_stats(std::ostream& out) {
     std::println(out, "Total count: {}", _count);
-    for (size_t idx {}; idx < _by_type.size(); ++idx) {
-        const auto count = _by_type[idx];
+    for (const auto& [idx, count] : std::views::enumerate(_by_type)) {
         if (count == 0) {
             continue;
         }
@@ -111,7 +113,7 @@ void Parser::dump_stats(std::ostream& out) {
             out << std::format("Order Replaces: {}", count) << '\n';
             break;
         default:
-            out << std::format("Unregistered parsing operation??? {}", count) << '\n';
+            out << std::format("Unhandled parsing operation: {}", count) << '\n';
         }
     }
 }
