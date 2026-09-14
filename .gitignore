@@ -3,3 +3,4 @@ Testing
 .cache
 compile_commands.json 
 /.direnv/
+NOADD*

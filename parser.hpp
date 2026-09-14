@@ -114,7 +114,8 @@ public:
     // Parses the arbitrary size message and outputs a collection of actions to
     // perform
     // TODO: ensure that we can elide the move / copy
-    [[nodiscard]] std::expected<Action, ParseError> parse(std::span<const std::byte> msg) noexcept;
+    [[nodiscard]] std::expected<Action, ParseError>
+    operator()(std::span<const std::byte> msg) noexcept;
 
     [[nodiscard]] auto count() const { return _count; }
 

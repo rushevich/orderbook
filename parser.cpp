@@ -67,7 +67,7 @@ Action parse_replace(std::span<const std::byte> msg) {
 }
 } // namespace detail
 [[nodiscard]] std::expected<Action, ParseError>
-Parser::parse(std::span<const std::byte> msg) noexcept {
+Parser::operator()(std::span<const std::byte> msg) noexcept {
     if (msg.empty()) {
         return std::unexpected { ParseError::empty };
     }

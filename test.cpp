@@ -112,7 +112,7 @@ static_assert(kReplace.size() == 35);
 
 TEST(Parser, ParseAdd) {
     parser::Parser par {};
-    const auto result = par.parse(kAdd);
+    const auto result = par(kAdd);
     ASSERT_TRUE(result.has_value());
     ASSERT_TRUE(std::holds_alternative<parser::OrderAdd>(*result));
     const auto add = std::get<parser::OrderAdd>(*result);
@@ -125,7 +125,7 @@ TEST(Parser, ParseAdd) {
 
 TEST(Parser, ParseExecute) {
     parser::Parser par {};
-    const auto result = par.parse(kExecute);
+    const auto result = par(kExecute);
     ASSERT_TRUE(result.has_value());
     ASSERT_TRUE(std::holds_alternative<parser::OrderExecute>(*result));
     const auto exec = std::get<parser::OrderExecute>(*result);
@@ -136,7 +136,7 @@ TEST(Parser, ParseExecute) {
 
 TEST(Parser, ParseCancel) {
     parser::Parser par {};
-    const auto result = par.parse(kCancel);
+    const auto result = par(kCancel);
     ASSERT_TRUE(result.has_value());
     ASSERT_TRUE(std::holds_alternative<parser::OrderCancel>(*result));
     const auto cancel = std::get<parser::OrderCancel>(*result);
@@ -147,7 +147,7 @@ TEST(Parser, ParseCancel) {
 
 TEST(Parser, ParseDelete) {
     parser::Parser par {};
-    const auto result = par.parse(kDelete);
+    const auto result = par(kDelete);
     ASSERT_TRUE(result.has_value());
     ASSERT_TRUE(std::holds_alternative<parser::OrderDelete>(*result));
     const auto del = std::get<parser::OrderDelete>(*result);
@@ -157,7 +157,7 @@ TEST(Parser, ParseDelete) {
 
 TEST(Parser, ParseReplace) {
     parser::Parser par {};
-    const auto result = par.parse(kReplace);
+    const auto result = par(kReplace);
     ASSERT_TRUE(result.has_value());
     ASSERT_TRUE(std::holds_alternative<parser::OrderReplace>(*result));
     const auto rep = std::get<parser::OrderReplace>(*result);
@@ -178,7 +178,7 @@ TEST(Parser, ParseReplace) {
 // uncomment this if on local. the test will fail to compile if not local since im not pushing the
 // huge binary file to github
 TEST(Parser, ParseFile) {
-    const auto path = fs::path(ITCH_ASSET_DIR) / "ITCH_BINARY";
+    const auto path = fs::path(ITCH_ASSET_DIR) / "NOADD_ITCH_BINARY";
     if (!fs::exists(path)) {
         GTEST_SKIP() << "no local ITCH binary found at " << path;
     }
@@ -195,7 +195,7 @@ TEST(Parser, ParseFile) {
         const auto type = parser::detail::parse_be<1>(data, pos + 2);
         ASSERT_EQ(len, common::message_lengths[type]);
         if (is_parsable(type)) {
-            par.parse(file.data().subspan(pos + 2, len));
+            par(file.data().subspan(pos + 2, len));
         }
 
         pos += 2 + len;
