@@ -1,33 +1,25 @@
-#include <optional>
-#include <print>
+#include "SPSCQueue.hpp"
+#include "framer.hpp"
+#include "parser.hpp"
+#include "reader.hpp"
 
-// trivial example to test CI
-class Base {
-public:
-    virtual void print() const {
-        std::println("Base::print()");
-    }
-    virtual ~Base() = default;
-};
-
-class Derived : public Base {
-    void print() const override {
-        std::println("Derived::print()");
-    }
-};
+#include <filesystem>
+#include <fstream>
+namespace fs = std::filesystem;
 
 int main() {
+    const auto path = fs::path(ITCH_ASSET_DIR) / "NOADD_ITCH_BINARY";
+    auto file = reader::detail::MappedFile(path);
+    const auto data = file.data();
+    framer::MessageFramer framer {};
+    parser::Parser parser {};
+    framer.consume_bytes(data, parser);
+    std::ofstream dump_file(fs::current_path() / "ParseFile_dump");
+    parser.dump_stats(dump_file);
+
     {
-        Base* b_obj = new Base {};
-        std::println("Invoking Base::print():");
-        b_obj->print();
-        delete b_obj;
+        rushevich::SPSCQueue<int> q { 50UZ };
     }
-    {
-        Base* d_obj = new Derived {};
-        std::println("Invoking Derived::print():");
-        d_obj->print();
-	delete d_obj;
-    }
+
     return 0;
 }
