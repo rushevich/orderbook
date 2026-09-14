@@ -1,0 +1,7 @@
+#+TITLE: Brainstorming on Proper Abstraction of Message Framing
+
+Currently we have the parser, which takes a span and emits an expected action or parsing malfunction, provided that the span is sized and framed properly -- so we need some sort of abstraction that can prepare the span such that, at the very least, the first byte is some sort of message type indicator. If the span is malformed thereafter, the parser simply emits a nonaction
+
+Data feed -> framer: tracks positioning within some buffer of bytes (off the wire or some local binary being replayed) -- invokes the parser with properly sized spans -> parser: dumps the actions into some SPSC ring-buffer, in some way, shape, or form
+
+The thing that is currently blocking me is hesitation to implement some form of framer that will be unusable, when the time to move to networking arrives. So perhaps the best split is for the framer for now to simply wield some arbitrary span over memory, without knowledge of its origin, along with an index

@@ -24,6 +24,8 @@ target_link_libraries(orderbook_core PRIVATE orderbook_warnings)
 # ---------- Executable ----------
 add_executable(orderbook main.cpp)
 target_link_libraries(orderbook PRIVATE orderbook_core orderbook_warnings)
+target_compile_definitions(orderbook PRIVATE
+  ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
 
 # ---------- Tests ----------
 if(ORDERBOOK_BUILD_TESTS)
