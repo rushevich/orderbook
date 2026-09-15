@@ -6,23 +6,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(ORDERBOOK_BUILD_TESTS "Build unit tests" ON)
-option(ORDERBOOK_BUILD_BENCHMARKS "Build benchmarks" ON)
+option(ORDERBOOK_BUILD_TESTS "Build unit tests" OFF)
+option(ORDERBOOK_BUILD_BENCHMARKS "Build benchmarks" OFF)
 
 # ---------- Common flags ----------
 add_library(orderbook_warnings INTERFACE)
 target_compile_options(orderbook_warnings INTERFACE
-  -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+  -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror -Wno-interference-size)
 
 # ---------- Core library ----------
 add_library(orderbook_core
-  parser.cpp
+  src/itch/Parser.cpp
+  src/system/MappedFile.cpp
+  src/feed/FileReader.cpp
 )
-target_include_directories(orderbook_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(orderbook_core
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 target_link_libraries(orderbook_core PRIVATE orderbook_warnings)
 
 # ---------- Executable ----------
-add_executable(orderbook main.cpp)
+add_executable(orderbook app/main.cpp)
 target_link_libraries(orderbook PRIVATE orderbook_core orderbook_warnings)
 target_compile_definitions(orderbook PRIVATE
   ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
@@ -33,7 +38,7 @@ if(ORDERBOOK_BUILD_TESTS)
   enable_testing()
   include(GoogleTest)
 
-  add_executable(orderbook_tests test.cpp)
+  add_executable(orderbook_tests tests/test.cpp)
   target_link_libraries(orderbook_tests
     PRIVATE orderbook_core orderbook_warnings GTest::gtest_main)
   gtest_discover_tests(orderbook_tests)
@@ -46,7 +51,7 @@ target_compile_definitions(orderbook_tests PRIVATE
 if(ORDERBOOK_BUILD_BENCHMARKS)
   find_package(benchmark REQUIRED)
 
-  add_executable(orderbook_bench bench.cpp)
+  add_executable(orderbook_bench bench/bench.cpp)
   target_link_libraries(orderbook_bench
     PRIVATE orderbook_core orderbook_warnings benchmark::benchmark_main)
 endif()

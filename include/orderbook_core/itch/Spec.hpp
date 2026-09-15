@@ -1,8 +1,8 @@
 #pragma once
 #include <array>
 #include <cstddef>
-#include <cstdint>
-namespace common {
+
+namespace rushevich::itch {
 constexpr inline std::array<size_t, 256> message_lengths { [] consteval -> std::array<size_t, 256> {
     std::array<size_t, 256> arr {};
     arr['S'] = 12; // System Event
@@ -30,4 +30,5 @@ constexpr inline std::array<size_t, 256> message_lengths { [] consteval -> std::
     arr['O'] = 48; // Direct Listing with Capital Raise
     return arr;
 }() };
-} // namespace common
+
+} // namespace rushevich::itch

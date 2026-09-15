@@ -1,0 +1,39 @@
+* What we have to do
+
+These are the current C++ files that we have within the project. This will inevitably continue to grow as the project continues. So we have to come up with some logical splits for all the stuff
+
+> common.hpp
+> FeedHandler.hpp
+> framer.hpp
+> main.cpp
+> parser.cpp
+> parser.hpp
+> reader.hpp
+> SPSCQueue.hpp
+> test.cpp
+
+As is standard, we will split off core functionality dependencies into a static library called orderbook_core. We must also reorganize namespacing and type naming. It will be acceptable to have everything under ~namespace rushevich~ and use UpperCamelCase for the latter,
+
+Here is what we might go for.
+#+BEGIN_SRC
+  include/
+  |--orderbook_core/
+     |--structures/
+       |--SPSCQueue.hpp
+       |--<some sort of DS for orderbook>.hpp
+     |--parsing/
+       |--Framer.hpp
+       |--Parser.hpp
+       |--FeedHandler.hpp
+     |--network/
+       |--<stuff for wire>.hpp
+     |--system/
+       |--Wrappers.hpp  * wrappers for posix/linux primitives
+     |--Common.hpp      * mostly constants or other utility function*
+#+END_SRC
+
+The ~src/~ directory will mirror this structure but just have implementations where we aren’t using some templated code.
+
+Then, we will have an ~app/~ directory for stuff that is solely related to the app itself.
+
+Then we will have the corresponding ~test/~ and ~bench/~ directories.

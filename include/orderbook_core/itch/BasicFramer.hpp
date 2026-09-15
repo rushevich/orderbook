@@ -1,28 +1,28 @@
 #pragma once
-#include "parser.hpp"
-#include "reader.hpp"
+#include "orderbook_core/util/Endian.hpp"
 
-#include <bit>
 #include <concepts>
 #include <cstddef>
-#include <cstdint>
 #include <span>
 
-namespace framer {
+namespace rushevich::itch {
 
-class MessageFramer {
+class BasicFramer {
 public:
     template <typename ParseFunction>
         requires std::invocable<ParseFunction, std::span<const std::byte>>
     void consume_bytes(std::span<const std::byte> bytes, ParseFunction& parse) {
         size_t pos {};
         while (pos + 2 <= bytes.size()) {
-            const auto len = parser::detail::parse_be<2>(bytes, pos);
-            parse(bytes.subspan(pos + 2, len));
+            const auto len = util::parse_be<2>(bytes, pos);
+            if (pos + 2 + len > bytes.size()) [[unlikely]] {
+                return;
+            }
+            [[maybe_unused]] auto val = parse(bytes.subspan(pos + 2, len));
             pos += 2 + len;
         }
     }
 
 private:
 };
-} // namespace framer
+} // namespace rushevich::itch

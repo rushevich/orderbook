@@ -1,17 +1,16 @@
-#include "common.hpp"
-#include "parser.hpp"
-#include "reader.hpp"
+#include "orderbook_core/Actions.hpp"
+#include "orderbook_core/Types.hpp"
+#include "orderbook_core/itch/Parser.hpp"
+#include "orderbook_core/itch/Spec.hpp"
+#include "orderbook_core/system/MappedFile.hpp"
+#include "orderbook_core/util/Endian.hpp"
 
 #include <array>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
-#include <iostream>
-#include <print>
-#include <ranges>
 #include <utility>
-#include <variant>
 
 namespace fs = std::filesystem;
 
@@ -110,25 +109,26 @@ static_assert(kReplace.size() == 35);
 
 } // namespace
 
+using namespace rushevich;
 TEST(Parser, ParseAdd) {
     parser::Parser par {};
     const auto result = par(kAdd);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<parser::OrderAdd>(*result));
-    const auto add = std::get<parser::OrderAdd>(*result);
+    ASSERT_TRUE(std::holds_alternative<OrderAdd>(*result));
+    const auto add = std::get<OrderAdd>(*result);
     EXPECT_EQ(std::to_underlying(add.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(add.qty), 100U);
     EXPECT_EQ(std::to_underlying(add.price), 123400U);
     EXPECT_EQ(std::to_underlying(add.locate), 1234U);
-    EXPECT_EQ(add.type, parser::Type::buy);
+    EXPECT_EQ(add.type, Type::buy);
 }
 
 TEST(Parser, ParseExecute) {
     parser::Parser par {};
     const auto result = par(kExecute);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<parser::OrderExecute>(*result));
-    const auto exec = std::get<parser::OrderExecute>(*result);
+    ASSERT_TRUE(std::holds_alternative<OrderExecute>(*result));
+    const auto exec = std::get<OrderExecute>(*result);
     EXPECT_EQ(std::to_underlying(exec.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(exec.executed_qty), 50U);
     EXPECT_EQ(std::to_underlying(exec.locate), 1234U);
@@ -138,8 +138,8 @@ TEST(Parser, ParseCancel) {
     parser::Parser par {};
     const auto result = par(kCancel);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<parser::OrderCancel>(*result));
-    const auto cancel = std::get<parser::OrderCancel>(*result);
+    ASSERT_TRUE(std::holds_alternative<OrderCancel>(*result));
+    const auto cancel = std::get<OrderCancel>(*result);
     EXPECT_EQ(std::to_underlying(cancel.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(cancel.qty), 25U);
     EXPECT_EQ(std::to_underlying(cancel.locate), 1234U);
@@ -149,8 +149,8 @@ TEST(Parser, ParseDelete) {
     parser::Parser par {};
     const auto result = par(kDelete);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<parser::OrderDelete>(*result));
-    const auto del = std::get<parser::OrderDelete>(*result);
+    ASSERT_TRUE(std::holds_alternative<OrderDelete>(*result));
+    const auto del = std::get<OrderDelete>(*result);
     EXPECT_EQ(std::to_underlying(del.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(del.locate), 1234U);
 }
@@ -159,8 +159,8 @@ TEST(Parser, ParseReplace) {
     parser::Parser par {};
     const auto result = par(kReplace);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<parser::OrderReplace>(*result));
-    const auto rep = std::get<parser::OrderReplace>(*result);
+    ASSERT_TRUE(std::holds_alternative<OrderReplace>(*result));
+    const auto rep = std::get<OrderReplace>(*result);
     EXPECT_EQ(std::to_underlying(rep.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(rep.new_oid), 12841944963ULL);
     EXPECT_EQ(std::to_underlying(rep.new_qty), 200U);
@@ -182,17 +182,17 @@ TEST(Parser, ParseFile) {
     if (!fs::exists(path)) {
         GTEST_SKIP() << "no local ITCH binary found at " << path;
     }
-    auto file = reader::detail::MappedFile(path);
+    auto file = system::MappedFile(path);
     const auto data = file.data();
     ASSERT_TRUE(!data.empty()); // we shouldn’t proceed if this is empty
     parser::Parser par;
     size_t pos { 0 };
     while (pos + 2 <= data.size()) {
-        const auto len = parser::detail::parse_be<2>(data, pos);
+        const auto len = util::parse_be<2>(data, pos);
         ASSERT_LE(pos + 2 + len, data.size());
-        const auto type = parser::detail::parse_be<1>(data, pos + 2);
-        ASSERT_EQ(len, common::message_lengths[type]);
-        par(file.data().subspan(pos + 2, len));
+        const auto type = util::parse_be<1>(data, pos + 2);
+        ASSERT_EQ(len, itch::message_lengths[type]);
+        [[maybe_unused]] auto val = par(file.data().subspan(pos + 2, len));
 
         pos += 2 + len;
     }
