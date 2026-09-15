@@ -42,10 +42,10 @@ if(ORDERBOOK_BUILD_TESTS)
   target_link_libraries(orderbook_tests
     PRIVATE orderbook_core orderbook_warnings GTest::gtest_main)
   gtest_discover_tests(orderbook_tests)
+  target_compile_definitions(orderbook_tests PRIVATE
+  ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
 endif()
 
-target_compile_definitions(orderbook_tests PRIVATE
-  ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
 
 # ---------- Benchmarks ----------
 if(ORDERBOOK_BUILD_BENCHMARKS)
