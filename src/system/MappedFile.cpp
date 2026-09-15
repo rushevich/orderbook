@@ -1,12 +1,13 @@
 #include "orderbook_core/system/MappedFile.hpp"
 
 #include <filesystem>
+#include <utility>
 
 namespace fs = std::filesystem;
 
 namespace rushevich::system {
 MappedFile::MappedFile(const fs::path& path) {
-    const auto descriptor = ::open(path.c_str(), O_RDONLY);
+    auto descriptor = ::open(path.c_str(), O_RDONLY);
     if (descriptor == -1) {
         throw std::system_error(errno, std::system_category(), "unable to open file for reading");
     }
@@ -21,37 +22,55 @@ MappedFile::MappedFile(const fs::path& path) {
         throw std::system_error(errno, std::system_category(), "failed to map file");
     }
 
-    _handle = MappedFileHandle { .fd = descriptor,
-                                 .begin = start,
-                                 .size = static_cast<size_t>(file_stats.st_size) };
-
+    _handle = PosixFileHandle { std::move(descriptor) };
+    _size = static_cast<size_t>(file_stats.st_size);
+    _buf = start;
     // We are going to read through the data sequentially - this madvise call allows the OS to
     // ‘aggressively read ahead’ the pages that we need
-    ::madvise(_handle.begin, _handle.size, MADV_SEQUENTIAL);
+    ::madvise(_buf, _size, MADV_SEQUENTIAL);
 }
 
 MappedFile::~MappedFile() { close(); }
 
-MappedFile::MappedFile(MappedFile&& other) noexcept : _handle { other._handle } {}
+MappedFile::MappedFile(MappedFile&& other) noexcept : _handle { std::move(other._handle) } {}
 
 MappedFile& MappedFile::operator=(MappedFile&& other) noexcept {
+    // Need to close current descriptor, and acquire the other
     if (this != &other) {
-        _handle.close();
-        _handle = other._handle;
-        other._handle.reset_fields();
+        _handle = std::move(other._handle);
     }
     return *this;
 }
 
-[[nodiscard]] std::span<const std::byte> MappedFile::data() const {
-    return { _handle.begin, _handle.size };
-}
+[[nodiscard]] std::span<const std::byte> MappedFile::data() const { return { _buf, _size }; }
+
 void MappedFile::close() {
-    if (_handle.is_open()) {
-        _handle.close();
-        if (auto* ptr = _handle.begin; ptr != nullptr) {
-            ::munmap(ptr, _handle.size); // returns the mapping back to the OS
-        }
+    _handle.reset();
+    if (_buf != nullptr) {
+        ::munmap(_buf, _size); // returns the mapping back to the OS
+    }
+}
+
+PosixFileHandle::PosixFileHandle(int&& fd) noexcept : _fd { std::move(fd) } {}
+
+PosixFileHandle::PosixFileHandle(PosixFileHandle&& other) noexcept : _fd { std::move(other._fd) } {}
+
+PosixFileHandle& PosixFileHandle::operator=(PosixFileHandle&& other) noexcept {
+    if (this != &other) {
+        reset(other._fd);
+    }
+    return *this;
+}
+
+[[nodiscard]] bool PosixFileHandle::is_open() const noexcept { return _fd != invalid_fd; }
+PosixFileHandle::~PosixFileHandle() noexcept { reset(); }
+
+// Reset should close the current file descriptor if needed and then take on the value of the input
+// argument
+void PosixFileHandle::reset(int other) noexcept {
+    if (_fd != invalid_fd) {
+        ::close(_fd);
+        _fd = other < 0 ? invalid_fd : other;
     }
 }
 

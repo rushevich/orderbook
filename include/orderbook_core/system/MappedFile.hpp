@@ -9,6 +9,27 @@
 
 namespace fs = std::filesystem;
 namespace rushevich::system {
+class PosixFileHandle {
+public:
+    PosixFileHandle() = default;
+    explicit PosixFileHandle(int&& fd) noexcept;
+    ~PosixFileHandle() noexcept;
+
+    PosixFileHandle(PosixFileHandle&& other) noexcept;
+    PosixFileHandle& operator=(PosixFileHandle&& other) noexcept;
+
+    PosixFileHandle(const PosixFileHandle&) = delete;
+    PosixFileHandle& operator=(const PosixFileHandle&) = delete;
+
+    [[nodiscard]] bool is_open() const noexcept;
+    void reset(int other = invalid_fd) noexcept;
+
+private:
+    static constexpr int invalid_fd = -1;
+    int _fd { invalid_fd };
+    // std::byte* begin { nullptr };
+    // size_t size {};
+};
 
 class MappedFile {
 public:
@@ -26,22 +47,11 @@ public:
 
 private:
     // TODO: Rewrite this to be semantically more like an actual RAII type
-    struct MappedFileHandle {
-        static constexpr int invalid_fd = -1;
-        int fd { invalid_fd };
-        std::byte* begin { nullptr };
-        size_t size {};
-        [[nodiscard]] bool is_open() const { return fd != invalid_fd && begin != nullptr; }
-        void close() const { ::close(fd); }
-        void reset_fields() {
-            fd = invalid_fd;
-            begin = nullptr;
-            size = 0;
-        }
-    };
 
-    MappedFileHandle _handle;
+    PosixFileHandle _handle;
 
+    std::byte* _buf { nullptr };
+    size_t _size { 0 };
     void close();
 };
 
