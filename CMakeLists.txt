@@ -9,6 +9,24 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(ORDERBOOK_BUILD_TESTS "Build unit tests" OFF)
 option(ORDERBOOK_BUILD_BENCHMARKS "Build benchmarks" OFF)
 
+# ---------- Sanitizers ----------
+set(ORDERBOOK_SANITIZER "" CACHE STRING
+  "Sanitizers to enable: address, undefined, thread (semicolon-separated)")
+set_property(CACHE ORDERBOOK_SANITIZER PROPERTY STRINGS
+  "" "address" "undefined" "address;undefined" "thread")
+
+if(ORDERBOOK_SANITIZER)
+  if("thread" IN_LIST ORDERBOOK_SANITIZER AND "address" IN_LIST ORDERBOOK_SANITIZER)
+    message(FATAL_ERROR "TSan cannot be combined with ASan")
+  endif()
+  list(JOIN ORDERBOOK_SANITIZER "," _orderbook_san)
+  add_compile_options(-fsanitize=${_orderbook_san} -fno-omit-frame-pointer -g -O1)
+  add_link_options(-fsanitize=${_orderbook_san})
+  if("undefined" IN_LIST ORDERBOOK_SANITIZER)
+    add_compile_options(-fno-sanitize-recover=all)
+  endif()
+endif()
+
 # ---------- Common flags ----------
 add_library(orderbook_warnings INTERFACE)
 target_compile_options(orderbook_warnings INTERFACE
