@@ -1,0 +1,16 @@
+* CPU Information
+
+Since I will be benchmarking primarily on one system, it is important to capture the relevant info about my system.
+Here’s what I’ve gleaned
+
+ISA: x86_64
+CPU: AMD Ryzen 7500F
+Cores/threads: 6 physical cores, 2 threads per -> 12 threads
+Caches:
+- L1d :: 192 KiB - 6 (each core has its own)
+- L1i :: 192 KiB - 6
+- L2 :: 6 MiB    - 6
+- L3 :: 32 MiB   - 1 (shared)
+
+Non-NUMA (this means non-uniform-memory-accesss). AMD uses something called infinity fabric, meaning traffic is not routed through one FSB but rather all cores have equivalent distance and latency to the memory controller.
+/Thank you to Ulrich Drepper for his great paper/
