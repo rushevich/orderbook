@@ -35,7 +35,7 @@ public:
 #endif
     }
 
-    [[nodiscard]] size_t advance(size_t index) const noexcept {
+    [[nodiscard]] __attribute__((always_inline)) size_t advance(size_t index) const noexcept {
         return (++index == _capacity) ? 0 : index;
     }
 
@@ -66,7 +66,6 @@ public:
 
         // Use memory order release to ensure a synchronizes-with relationship with the reader
         // thread that acquires all changes to the _writeIdx
-        _writeIdxCache = nextWriteIdx;
         _writeIdx.store(nextWriteIdx, release);
     }
 
@@ -91,7 +90,6 @@ public:
         // gets placed on the queue
         ATraits::destroy(_allocator, _buf + readIdx + PADDING);
         const auto nextReadIdx = advance(readIdx);
-        _readIdxCache = nextReadIdx;
         _readIdx.store(nextReadIdx, release);
     }
 

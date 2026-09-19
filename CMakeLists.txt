@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(ORDERBOOK_BUILD_TESTS "Build unit tests" OFF)
-option(ORDERBOOK_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(ORDERBOOK_BUILD_TESTS "Build unit tests" ON)
+option(ORDERBOOK_BUILD_BENCHMARKS "Build benchmarks" ON)
 
 # ---------- Sanitizers ----------
 set(ORDERBOOK_SANITIZER "" CACHE STRING
@@ -72,4 +72,9 @@ if(ORDERBOOK_BUILD_BENCHMARKS)
   add_executable(orderbook_bench bench/bench.cpp)
   target_link_libraries(orderbook_bench
     PRIVATE orderbook_core orderbook_warnings benchmark::benchmark_main)
+
+  add_executable(orderbook_perfbench bench/queue.cpp)
+  target_link_libraries(orderbook_perfbench PRIVATE orderbook_core orderbook_warnings)
+  target_compile_options(orderbook_perfbench PRIVATE -O2 -g -fno-omit-frame-pointer)
+  target_compile_definitions(orderbook_perfbench PRIVATE NDEBUG)
 endif()
