@@ -114,8 +114,7 @@ TEST(Parser, ParseAdd) {
     parser::Parser par {};
     const auto result = par(kAdd);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<OrderAdd>(*result));
-    const auto add = std::get<OrderAdd>(*result);
+    const auto add = *result;
     EXPECT_EQ(std::to_underlying(add.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(add.qty), 100U);
     EXPECT_EQ(std::to_underlying(add.price), 123400U);
@@ -127,10 +126,9 @@ TEST(Parser, ParseExecute) {
     parser::Parser par {};
     const auto result = par(kExecute);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<OrderExecute>(*result));
-    const auto exec = std::get<OrderExecute>(*result);
+    const auto exec = *result;
     EXPECT_EQ(std::to_underlying(exec.oid), 4886718345ULL);
-    EXPECT_EQ(std::to_underlying(exec.executed_qty), 50U);
+    EXPECT_EQ(std::to_underlying(exec.qty), 50U);
     EXPECT_EQ(std::to_underlying(exec.locate), 1234U);
 }
 
@@ -138,8 +136,7 @@ TEST(Parser, ParseCancel) {
     parser::Parser par {};
     const auto result = par(kCancel);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<OrderCancel>(*result));
-    const auto cancel = std::get<OrderCancel>(*result);
+    const auto cancel = *result;
     EXPECT_EQ(std::to_underlying(cancel.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(cancel.qty), 25U);
     EXPECT_EQ(std::to_underlying(cancel.locate), 1234U);
@@ -149,8 +146,7 @@ TEST(Parser, ParseDelete) {
     parser::Parser par {};
     const auto result = par(kDelete);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<OrderDelete>(*result));
-    const auto del = std::get<OrderDelete>(*result);
+    const auto del = *result;
     EXPECT_EQ(std::to_underlying(del.oid), 4886718345ULL);
     EXPECT_EQ(std::to_underlying(del.locate), 1234U);
 }
@@ -159,12 +155,11 @@ TEST(Parser, ParseReplace) {
     parser::Parser par {};
     const auto result = par(kReplace);
     ASSERT_TRUE(result.has_value());
-    ASSERT_TRUE(std::holds_alternative<OrderReplace>(*result));
-    const auto rep = std::get<OrderReplace>(*result);
+    const auto rep = *result;
     EXPECT_EQ(std::to_underlying(rep.oid), 4886718345ULL);
-    EXPECT_EQ(std::to_underlying(rep.new_oid), 12841944963ULL);
-    EXPECT_EQ(std::to_underlying(rep.new_qty), 200U);
-    EXPECT_EQ(std::to_underlying(rep.new_price), 567800U);
+    EXPECT_EQ(std::to_underlying(rep.repl_oid), 12841944963ULL);
+    EXPECT_EQ(std::to_underlying(rep.qty), 200U);
+    EXPECT_EQ(std::to_underlying(rep.price), 567800U);
     EXPECT_EQ(std::to_underlying(rep.locate), 1234U);
 }
 

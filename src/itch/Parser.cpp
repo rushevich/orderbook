@@ -8,69 +8,43 @@
 #include <span>
 
 namespace rushevich::parser {
-// struct OrderAdd {
-//     OrderID oid {};
-//     Quantity qty {};
-//     Price price {};
-//     InstrumentID locate {};
-//     Type type {};
-// };
-Action parse_add(std::span<const std::byte> msg) {
-    return OrderAdd { .oid = OrderID { util::parse_be<8>(msg, 11) },
-                      .qty = Quantity { util::parse_be<4>(msg, 20) },
-                      .price = Price { util::parse_be<4>(msg, 32) },
-                      .locate = InstrumentID { util::parse_be<2>(msg, 1) },
-                      .type = static_cast<char>(msg[19]) == 'B' ? Type::buy : Type::sell };
+
+OrderAction parse_add(std::span<const std::byte> msg) {
+    return { .oid = OrderID { util::parse_be<8>(msg, 11) },
+             .price = Price { util::parse_be<4>(msg, 32) },
+             .qty = Quantity { util::parse_be<4>(msg, 20) },
+             .locate = InstrumentID { util::parse_be<2>(msg, 1) },
+             .type = static_cast<char>(msg[19]) == 'B' ? Type::buy : Type::sell };
 }
 
-// struct OrderExecute {
-//     OrderID oid {};
-//     Quantity executed_qty {};
-//     InstrumentID locate {};
-// };
-Action parse_execute(std::span<const std::byte> msg) {
-    return OrderExecute { .oid = OrderID { util::parse_be<8>(msg, 11) },
-                          .executed_qty = Quantity { util::parse_be<4>(msg, 19) },
-                          .locate = InstrumentID { util::parse_be<2>(msg, 1) } };
+OrderAction parse_execute(std::span<const std::byte> msg) {
+    return { .oid = OrderID { util::parse_be<8>(msg, 11) },
+             .qty = Quantity { util::parse_be<4>(msg, 19) },
+             .locate = InstrumentID { util::parse_be<2>(msg, 1) } };
 }
-// struct OrderCancel {
-//     OrderID oid {};
-//     Quantity qty {};
-//     InstrumentID locate {};
-// };
-Action parse_cancel(std::span<const std::byte> msg) {
-    return OrderCancel { .oid = OrderID { util::parse_be<8>(msg, 11) },
-                         .qty = Quantity { util::parse_be<4>(msg, 19) },
+
+OrderAction parse_cancel(std::span<const std::byte> msg) {
+    return { .oid = OrderID { util::parse_be<8>(msg, 11) },
+             .qty = Quantity { util::parse_be<4>(msg, 19) },
+             .locate = InstrumentID { util::parse_be<2>(msg, 1) } };
+}
+
+OrderAction parse_delete(std::span<const std::byte> msg) {
+    return { .oid = OrderID { util::parse_be<8>(msg, 11) },
+             .locate = InstrumentID { util::parse_be<2>(msg, 1) } };
+}
+
+OrderAction parse_replace(std::span<const std::byte> msg) {
+    return OrderAction { .oid = OrderID { util::parse_be<8>(msg, 11) },
+                         .repl_oid = OrderID { util::parse_be<8>(msg, 19) },
+                         .price = Price { util::parse_be<4>(msg, 31) },
+                         .qty = Quantity { util::parse_be<4>(msg, 27) },
                          .locate = InstrumentID { util::parse_be<2>(msg, 1) } };
 }
 
-// struct OrderDelete {
-//     OrderID oid {};
-//     InstrumentID locate {};
-// };
-Action parse_delete(std::span<const std::byte> msg) {
-    return OrderDelete { .oid = OrderID { util::parse_be<8>(msg, 11) },
-                         .locate = InstrumentID { util::parse_be<2>(msg, 1) } };
-}
+OrderAction parse_do_nothing([[maybe_unused]] std::span<const std::byte>) { return {}; }
 
-// struct OrderReplace {
-//     OrderID oid {};
-//     OrderID new_oid {};
-//     Quantity new_qty {};
-//     Price new_price {};
-//     InstrumentID locate {};
-// };
-Action parse_replace(std::span<const std::byte> msg) {
-    return OrderReplace { .oid = OrderID { util::parse_be<8>(msg, 11) },
-                          .new_oid = OrderID { util::parse_be<8>(msg, 19) },
-                          .new_qty = Quantity { util::parse_be<4>(msg, 27) },
-                          .new_price = Price { util::parse_be<4>(msg, 31) },
-                          .locate = InstrumentID { util::parse_be<2>(msg, 1) } };
-}
-
-Action parse_do_nothing([[maybe_unused]] std::span<const std::byte>) { return DoNothing {}; }
-
-[[nodiscard]] std::expected<Action, ParseError>
+[[nodiscard]] std::expected<OrderAction, ParseError>
 Parser::operator()(std::span<const std::byte> msg) noexcept {
     if (msg.empty()) {
         return std::unexpected { ParseError::empty };

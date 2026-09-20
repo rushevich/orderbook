@@ -12,14 +12,14 @@
 namespace rushevich::parser {
 
 // Function declarations for internal parse-handling:
-Action parse_add(std::span<const std::byte> msg);
-Action parse_execute(std::span<const std::byte> msg);
-Action parse_cancel(std::span<const std::byte> msg);
-Action parse_delete(std::span<const std::byte> msg);
-Action parse_replace(std::span<const std::byte> msg);
-Action parse_do_nothing(std::span<const std::byte> msg);
+OrderAction parse_add(std::span<const std::byte> msg);
+OrderAction parse_execute(std::span<const std::byte> msg);
+OrderAction parse_cancel(std::span<const std::byte> msg);
+OrderAction parse_delete(std::span<const std::byte> msg);
+OrderAction parse_replace(std::span<const std::byte> msg);
+OrderAction parse_do_nothing(std::span<const std::byte> msg);
 
-using ParsingFunction = Action (*)(std::span<const std::byte> msg);
+using ParsingFunction = OrderAction (*)(std::span<const std::byte> msg);
 
 inline constexpr std::array<ParsingFunction, 256> parse_lut = [] consteval {
     std::array<ParsingFunction, 256> arr {};
@@ -61,7 +61,7 @@ public:
     // Parses the arbitrary size message and outputs a collection of actions to
     // perform
     // TODO: ensure that we can elide the move / copy
-    [[nodiscard]] std::expected<Action, ParseError>
+    [[nodiscard]] std::expected<OrderAction, ParseError>
     operator()(std::span<const std::byte> msg) noexcept;
 
     [[nodiscard]] auto count() const { return _count; }
