@@ -4,44 +4,6 @@
 #include <variant>
 
 namespace rushevich {
-struct OrderAdd {
-    OrderID oid {};
-    Quantity qty {};
-    Price price {};
-    InstrumentID locate {};
-    Type type {};
-};
-
-// Executes order (reduces the quantity by executed count)
-struct OrderExecute {
-    OrderID oid {};
-    Quantity executed_qty {};
-    InstrumentID locate {};
-};
-
-// Action that cancels a certain amount of shares
-struct OrderCancel {
-    OrderID oid {};
-    Quantity qty {};
-    InstrumentID locate {};
-};
-
-// Deletes the order from the book (reduces the order's quantity to 0)
-struct OrderDelete {
-    OrderID oid {};
-    InstrumentID locate {};
-};
-
-// Replaces an order by reducing the current order's quantity to 0 and then
-// creating a new order with a new id
-struct OrderReplace {
-    OrderID oid {};
-    OrderID new_oid {};
-    Quantity new_qty {};
-    Price new_price {};
-    InstrumentID locate {};
-};
-
 // An order type that refers to any possible order
 struct OrderAction {
     OrderID oid {};
@@ -49,7 +11,8 @@ struct OrderAction {
     Price price {};         // Used in order add and replace
     Quantity qty {};        // Used in add, execute, cancel, and replace
     InstrumentID locate {}; // Used ubiquitously
-    Type type {};           // Used in order add
+    Side side {};           // Used in order add
+    uint8_t type {};
 };
 struct DoNothing {};
 

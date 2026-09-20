@@ -14,7 +14,7 @@ namespace rushevich::parser {
 // Function declarations for internal parse-handling:
 OrderAction parse_add(std::span<const std::byte> msg);
 OrderAction parse_execute(std::span<const std::byte> msg);
-OrderAction parse_cancel(std::span<const std::byte> msg);
+OrderAction parse_exec_cancel(std::span<const std::byte> msg);
 OrderAction parse_delete(std::span<const std::byte> msg);
 OrderAction parse_replace(std::span<const std::byte> msg);
 OrderAction parse_do_nothing(std::span<const std::byte> msg);
@@ -25,9 +25,9 @@ inline constexpr std::array<ParsingFunction, 256> parse_lut = [] consteval {
     std::array<ParsingFunction, 256> arr {};
     arr['A'] = parse_add;
     arr['F'] = parse_add;
-    arr['E'] = parse_execute;
-    arr['C'] = parse_execute;
-    arr['X'] = parse_cancel;
+    arr['E'] = parse_exec_cancel;
+    arr['C'] = parse_exec_cancel;
+    arr['X'] = parse_exec_cancel;
     arr['D'] = parse_delete;
     arr['U'] = parse_replace;
     arr['S'] = parse_do_nothing; // System Event

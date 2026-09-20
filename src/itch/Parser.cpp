@@ -18,14 +18,7 @@ OrderAction parse_add(std::span<const std::byte> msg) {
              .type = static_cast<uint8_t>(msg[0]) };
 }
 
-OrderAction parse_execute(std::span<const std::byte> msg) {
-    return { .oid = OrderID { util::parse_be<8>(msg, 11) },
-             .qty = Quantity { util::parse_be<4>(msg, 19) },
-             .locate = InstrumentID { util::parse_be<2>(msg, 1) },
-             .type = static_cast<uint8_t>(msg[0]) };
-}
-
-OrderAction parse_cancel(std::span<const std::byte> msg) {
+OrderAction parse_exec_cancel(std::span<const std::byte> msg) {
     return { .oid = OrderID { util::parse_be<8>(msg, 11) },
              .qty = Quantity { util::parse_be<4>(msg, 19) },
              .locate = InstrumentID { util::parse_be<2>(msg, 1) },
