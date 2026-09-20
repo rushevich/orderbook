@@ -65,6 +65,9 @@ public:
     ~ObjectPool() noexcept {
         assert(_pool != nullptr);
         Node_ATraits::deallocate(_Node_Allocator, _pool, Capacity);
+        // We can do this because currently, we constrain the pool to be used with trivially
+        // destructible types. For non-trivially destructible types, we will have to implement some
+        // more complex bookkeeping for allocated stuff
     }
 
 private:

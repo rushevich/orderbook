@@ -1,6 +1,5 @@
 #include "orderbook_core/containers/ObjectPool.hpp"
 
-#include <concepts>
 #include <gtest/gtest.h>
 #include <ranges>
 #include <vector>

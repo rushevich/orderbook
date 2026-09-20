@@ -56,7 +56,10 @@ if(ORDERBOOK_BUILD_TESTS)
   enable_testing()
   include(GoogleTest)
 
-  add_executable(orderbook_tests tests/test.cpp)
+  add_executable(orderbook_tests
+    tests/test.cpp
+    tests/containers/ObjectPool.cpp
+  )
   target_link_libraries(orderbook_tests
     PRIVATE orderbook_core orderbook_warnings GTest::gtest_main)
   gtest_discover_tests(orderbook_tests)
