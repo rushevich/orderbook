@@ -23,6 +23,22 @@ public:
         }
     }
 
+    template <typename ParseFunction, typename OtherFunction>
+        requires std::invocable<ParseFunction, std::span<const std::byte>>
+    void consume_bytes(std::span<const std::byte> bytes, ParseFunction& parse,
+                       OtherFunction& other) {
+        size_t pos {};
+        while (pos + 2 <= bytes.size()) {
+            const auto len = util::parse_be<2>(bytes, pos);
+            if (pos + 2 + len > bytes.size()) [[unlikely]] {
+                return;
+            }
+            auto val = parse(bytes.subspan(pos + 2, len));
+            other(val);
+            pos += 2 + len;
+        }
+    }
+
 private:
 };
 } // namespace rushevich::itch
