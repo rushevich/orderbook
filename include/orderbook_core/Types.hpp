@@ -33,17 +33,17 @@ using Quantity = StrongInt<uint32_t, struct QuantityTag>;
 // enum class Price : uint32_t {};
 using Price = StrongInt<uint32_t, struct PriceTag>;
 
-struct OrderMeta : public container::IntrusiveNode<> {
-    uint64_t oid;
-    uint32_t qty;
-    uint32_t price_tick;
-    uint16_t locate_idx; // Index for orderbook array.
-    uint8_t is_bid;
+struct OrderMeta : public container::IntrusiveNode<OrderMeta*> {
+    uint64_t oid {};
+    uint32_t qty {};
+    uint32_t priceTick {};
+    uint16_t locateIdx {}; // Index for orderbook array.
+    bool isBid {};
 };
 
 struct PriceLevel {
-    uint32_t head_handle;
-    uint32_t tail_handle;
+    OrderMeta* headHandle; // corresponds to handles that are given out by the orderPool
+    OrderMeta* tailHandle;
     uint32_t volume;
 };
 } // namespace rushevich
