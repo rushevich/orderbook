@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <unordered_set>
 #include <utility>
 
 namespace fs = std::filesystem;
@@ -115,11 +116,11 @@ TEST(Parser, ParseAdd) {
     const auto result = par(kAdd);
     ASSERT_TRUE(result.has_value());
     const auto add = *result;
-    EXPECT_EQ(std::to_underlying(add.oid), 4886718345ULL);
-    EXPECT_EQ(std::to_underlying(add.qty), 100U);
-    EXPECT_EQ(std::to_underlying(add.price), 123400U);
-    EXPECT_EQ(std::to_underlying(add.locate), 1234U);
-    EXPECT_EQ(add.type, Type::buy);
+    EXPECT_EQ(add.oid.value(), 4886718345ULL);
+    EXPECT_EQ(add.qty.value(), 100U);
+    EXPECT_EQ(add.price.value(), 123400U);
+    EXPECT_EQ(add.locate.value(), 1234U);
+    EXPECT_EQ(add.side, Side::buy);
 }
 
 TEST(Parser, ParseExecute) {
@@ -127,9 +128,9 @@ TEST(Parser, ParseExecute) {
     const auto result = par(kExecute);
     ASSERT_TRUE(result.has_value());
     const auto exec = *result;
-    EXPECT_EQ(std::to_underlying(exec.oid), 4886718345ULL);
-    EXPECT_EQ(std::to_underlying(exec.qty), 50U);
-    EXPECT_EQ(std::to_underlying(exec.locate), 1234U);
+    EXPECT_EQ(exec.oid.value(), 4886718345ULL);
+    EXPECT_EQ(exec.qty.value(), 50U);
+    EXPECT_EQ(exec.locate.value(), 1234U);
 }
 
 TEST(Parser, ParseCancel) {
@@ -137,9 +138,9 @@ TEST(Parser, ParseCancel) {
     const auto result = par(kCancel);
     ASSERT_TRUE(result.has_value());
     const auto cancel = *result;
-    EXPECT_EQ(std::to_underlying(cancel.oid), 4886718345ULL);
-    EXPECT_EQ(std::to_underlying(cancel.qty), 25U);
-    EXPECT_EQ(std::to_underlying(cancel.locate), 1234U);
+    EXPECT_EQ(cancel.oid.value(), 4886718345ULL);
+    EXPECT_EQ(cancel.qty.value(), 25U);
+    EXPECT_EQ(cancel.locate.value(), 1234U);
 }
 
 TEST(Parser, ParseDelete) {
@@ -147,8 +148,8 @@ TEST(Parser, ParseDelete) {
     const auto result = par(kDelete);
     ASSERT_TRUE(result.has_value());
     const auto del = *result;
-    EXPECT_EQ(std::to_underlying(del.oid), 4886718345ULL);
-    EXPECT_EQ(std::to_underlying(del.locate), 1234U);
+    EXPECT_EQ(del.oid.value(), 4886718345ULL);
+    EXPECT_EQ(del.locate.value(), 1234U);
 }
 
 TEST(Parser, ParseReplace) {
@@ -156,11 +157,11 @@ TEST(Parser, ParseReplace) {
     const auto result = par(kReplace);
     ASSERT_TRUE(result.has_value());
     const auto rep = *result;
-    EXPECT_EQ(std::to_underlying(rep.oid), 4886718345ULL);
-    EXPECT_EQ(std::to_underlying(rep.repl_oid), 12841944963ULL);
-    EXPECT_EQ(std::to_underlying(rep.qty), 200U);
-    EXPECT_EQ(std::to_underlying(rep.price), 567800U);
-    EXPECT_EQ(std::to_underlying(rep.locate), 1234U);
+    EXPECT_EQ(rep.oid.value(), 4886718345ULL);
+    EXPECT_EQ(rep.repl_oid.value(), 12841944963ULL);
+    EXPECT_EQ(rep.qty.value(), 200U);
+    EXPECT_EQ(rep.price.value(), 567800U);
+    EXPECT_EQ(rep.locate.value(), 1234U);
 }
 
 // template <typename... Ts> struct overloaded : Ts... {
@@ -188,7 +189,6 @@ TEST(Parser, ParseFile) {
         const auto type = util::parse_be<1>(data, pos + 2);
         ASSERT_EQ(len, itch::message_lengths[type]);
         [[maybe_unused]] auto val = par(file.data().subspan(pos + 2, len));
-
         pos += 2 + len;
     }
     ASSERT_TRUE(!par.histogram().empty());
