@@ -13,7 +13,6 @@ namespace rushevich::parser {
 
 // Function declarations for internal parse-handling:
 OrderAction parse_add(std::span<const std::byte> msg);
-OrderAction parse_execute(std::span<const std::byte> msg);
 OrderAction parse_exec_cancel(std::span<const std::byte> msg);
 OrderAction parse_delete(std::span<const std::byte> msg);
 OrderAction parse_replace(std::span<const std::byte> msg);

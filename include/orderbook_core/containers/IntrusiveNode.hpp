@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace rushevich::container {
+namespace rushevich::containers {
 template <typename HandleType = uint32_t> struct IntrusiveNode {
     static constexpr auto NULL_HANDLE { static_cast<HandleType>(-1) };
     HandleType prevHandle { NULL_HANDLE };
@@ -14,4 +14,4 @@ template <typename HandleType> struct IntrusiveNode<HandleType*> {
     HandleType* prevHandle { NULL_HANDLE };
     HandleType* nextHandle { NULL_HANDLE };
 };
-} // namespace rushevich::container
+} // namespace rushevich::containers

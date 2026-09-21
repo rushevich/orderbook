@@ -15,6 +15,7 @@ public:
     explicit constexpr operator T() const noexcept { return _underlying; }
     constexpr T value() const noexcept { return _underlying; }
     friend auto operator<=>(StrongInt, StrongInt) noexcept = default;
+    constexpr T operator-=(StrongInt other) { return _underlying - other._underlying; }
 
 private:
     T _underlying {};
@@ -33,7 +34,7 @@ using Quantity = StrongInt<uint32_t, struct QuantityTag>;
 // enum class Price : uint32_t {};
 using Price = StrongInt<uint32_t, struct PriceTag>;
 
-struct OrderMeta : public container::IntrusiveNode<OrderMeta*> {
+struct OrderMeta : public containers::IntrusiveNode<OrderMeta*> {
     uint64_t oid {};
     uint32_t qty {};
     uint32_t priceTick {};
