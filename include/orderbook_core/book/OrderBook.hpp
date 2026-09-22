@@ -58,10 +58,12 @@ public:
     }
 
 private:
-    // Slashes the links between the order and the other order’s in its pricelevel
-    void _unlinkOrder(OrderMeta* orderMeta, SideMap& sideMap);
+    // Slashes the links between the order and the other order’s in its pricelevel.
+    // Also handles reduction in quantity from the corresponding PriceLevel’s volume field.
+    void _unlinkOrder(OrderMeta* orderMeta, PriceLevel& priceLevel);
 
     // Links the order referred to by ’orderMeta’ into ’priceLevel’ properly.
+    // Also handles increase in quantity to the corresponding PriceLevel’s volume field.
     void _linkToPrice(OrderMeta* orderMeta, PriceLevel& priceLevel);
 };
 
