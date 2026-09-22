@@ -14,11 +14,11 @@ inline constexpr auto NUM_SYMBOLS = 5'000UZ;
 inline constexpr auto ORDER_POOL_SIZE = 10'000'000UZ;
 } // namespace detail
 class Orchestrator {
+public:
     Orchestrator(size_t instrumentCount = detail::NUM_SYMBOLS)
         : _oidMetaMap(detail::ORDER_POOL_SIZE),
           _books(instrumentCount) {}
 
-public:
     // Maps OrderID to the index within the object pool. Chose to use indices instead of
     // pointers for size reduction purposes. To get the data, simply operator[] with the value
     // It is static because this map is shared across all instruments
@@ -31,7 +31,7 @@ public:
     Orchestrator& operator=(const Orchestrator&) = delete;
     Orchestrator& operator=(Orchestrator&&) = delete;
 
-    ~Orchestrator() = delete;
+    ~Orchestrator() = default;
 
 private:
     ObjectPool<OrderMeta, detail::ORDER_POOL_SIZE> _pool;

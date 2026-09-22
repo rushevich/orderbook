@@ -1,5 +1,6 @@
 #include "orderbook_core/Actions.hpp"
 #include "orderbook_core/Types.hpp"
+#include "orderbook_core/book/Orchestrator.hpp"
 #include "orderbook_core/itch/Parser.hpp"
 #include "orderbook_core/itch/Spec.hpp"
 #include "orderbook_core/system/MappedFile.hpp"
@@ -173,12 +174,16 @@ TEST(Parser, ParseFile) {
     ASSERT_TRUE(!data.empty()); // we shouldn’t proceed if this is empty
     parser::Parser par;
     size_t pos { 0 };
+    book::Orchestrator orchestrator;
     while (pos + 2 <= data.size()) {
         const auto len = util::parse_be<2>(data, pos);
         ASSERT_LE(pos + 2 + len, data.size());
         const auto type = util::parse_be<1>(data, pos + 2);
         ASSERT_EQ(len, itch::message_lengths[type]);
         [[maybe_unused]] auto val = par(file.data().subspan(pos + 2, len));
+        if (val) {
+            orchestrator.consume(val.value());
+        }
         pos += 2 + len;
     }
     ASSERT_TRUE(!par.histogram().empty());
