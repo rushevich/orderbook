@@ -1,0 +1,25 @@
+** Order handling function traces:
+
+*** ~_addOrder~
+1) fetch the correct sideMap
+2) allocate a default-constructed order in the pool
+3) initialize the fields manually
+4) _linkToPrice with the orderMeta and the PriceLevel corresponding to the now set priceTick
+   a. adds the orders qty to the price volume qty field
+   b. if priceLevel is fresh, sets both head and tail to the OrderMeta*
+   c. otherwise, links the tail’s next to the passed in orderMeta
+   d. links orderMetas prev handle to tail
+   e. sets tail to the fresh linked order
+5) creates an entry in the _oidMetaMap with the order’s id
+
+*** ~_execOrCancelOrder~
+1) fetches the iterator within the oidMap -> if non existent this is a problem
+2) fetches the OrderMeta*, and the sidemap
+3) checks if the orders quantity - the input canceled / executed quantity == 0
+   a. if so, unlinks the order
+     a1. subtracts the orders resting qty from the price level’s volume
+     a2. further unlinking...
+   b. erases the order from the map, then frees the orderMeta, invalidating it
+   c. early return
+4) 
+   
