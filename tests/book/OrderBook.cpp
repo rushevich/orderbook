@@ -13,6 +13,6 @@ using containers::ObjectPool;
 TEST(SUITE, ConstructionDestruction) {
     ObjectPool<OrderMeta, 100> pool;
     std::unordered_map<uint64_t, OrderMeta*> map(100);
-    OrderBook book(pool, map);
+    OrderBook book;
 }
 #undef SUITE

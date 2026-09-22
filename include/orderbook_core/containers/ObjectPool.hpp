@@ -4,7 +4,6 @@
 #include <concepts>
 #include <cstddef>
 #include <memory>
-#include <new>
 #include <utility>
 namespace rushevich::containers {
 

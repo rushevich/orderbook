@@ -163,7 +163,7 @@ TEST(Parser, ParseReplace) {
 }
 
 TEST(Parser, ParseFile) {
-    GTEST_SKIP(); // Test is slow and proven to pass
+    // GTEST_SKIP(); // Test is slow and proven to pass
     const auto path = fs::path(ITCH_ASSET_DIR) / "NOADD_ITCH_BINARY";
     if (!fs::exists(path)) {
         GTEST_SKIP() << "no local ITCH binary found at " << path;

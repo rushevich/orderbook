@@ -18,22 +18,22 @@ int main() {
     itch::BasicFramer framer {};
     parser::Parser parser {};
 #ifdef DIAG
-    std::map<uint16_t, std::set<uint32_t>> locateToPriceRange;
+    std::map<InstrumentID, std::set<Price>> locateToPriceRange;
     uint32_t global_min { UINT_MAX };
     uint32_t global_max { 0 };
     uint32_t max_ticks { 0 };
     uint32_t adds {};
     uint32_t reps {};
 
-    const auto diagnosticsFunction = [&](const auto& action) {
-        if (auto price = action->price.value();
-            price > 0 && (action->type == 'U' || action->type == 'A')) {
-            adds += (action->type == 'A') ? 1 : 0;
-            reps += (action->type == 'U') ? 1 : 0;
+    const auto diagnosticsFunction = [&](const OrderAction& action) {
+        if (auto price = action.price;
+            price.value() > 0 && (action.type == Type::Replace || action.type == Type::Add)) {
+            adds += (action.type == Type::Add) ? 1 : 0;
+            reps += (action.type == Type::Replace) ? 1 : 0;
 
-            locateToPriceRange[action->locate.value()].insert(price);
-            global_min = std::min(price, global_min);
-            global_max = std::max(price, global_max);
+            locateToPriceRange[action.locate].insert(price);
+            global_min = std::min(price.value(), global_min);
+            global_max = std::max(price.value(), global_max);
         }
     };
 #endif
@@ -48,8 +48,8 @@ int main() {
     parser.dump_stats(dump_file);
 #ifdef DIAG
     for (const auto& [loc, prices] : locateToPriceRange) {
-        std::println(dump_file, "loc {}: min = {}, max = {}, tick-count = {}", loc, *prices.begin(),
-                     *prices.rbegin(), prices.size());
+        std::println(dump_file, "loc {}: min = {}, max = {}, tick-count = {}", loc.value(),
+                     prices.begin()->value(), prices.rbegin()->value(), prices.size());
         max_ticks = std::max(max_ticks, static_cast<uint32_t>(prices.size()));
     }
 

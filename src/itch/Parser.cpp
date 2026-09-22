@@ -15,20 +15,27 @@ OrderAction parse_add(std::span<const std::byte> msg) {
              .qty = Quantity { util::parse_be<4>(msg, 20) },
              .locate = InstrumentID { util::parse_be<2>(msg, 1) },
              .side = static_cast<char>(msg[19]) == 'B' ? Side::buy : Side::sell,
-             .type = static_cast<uint8_t>(msg[0]) };
+             .type = Type::Add };
 }
 
-OrderAction parse_exec_cancel(std::span<const std::byte> msg) {
+OrderAction parse_execute(std::span<const std::byte> msg) {
     return { .oid = OrderID { util::parse_be<8>(msg, 11) },
              .qty = Quantity { util::parse_be<4>(msg, 19) },
              .locate = InstrumentID { util::parse_be<2>(msg, 1) },
-             .type = static_cast<uint8_t>(msg[0]) };
+             .type = Type::Execute };
+}
+
+OrderAction parse_cancel(std::span<const std::byte> msg) {
+    return { .oid = OrderID { util::parse_be<8>(msg, 11) },
+             .qty = Quantity { util::parse_be<4>(msg, 19) },
+             .locate = InstrumentID { util::parse_be<2>(msg, 1) },
+             .type = Type::Cancel };
 }
 
 OrderAction parse_delete(std::span<const std::byte> msg) {
     return { .oid = OrderID { util::parse_be<8>(msg, 11) },
              .locate = InstrumentID { util::parse_be<2>(msg, 1) },
-             .type = static_cast<uint8_t>(msg[0]) };
+             .type = Type::Delete };
 }
 
 OrderAction parse_replace(std::span<const std::byte> msg) {
@@ -37,7 +44,7 @@ OrderAction parse_replace(std::span<const std::byte> msg) {
                          .price = Price { util::parse_be<4>(msg, 31) },
                          .qty = Quantity { util::parse_be<4>(msg, 27) },
                          .locate = InstrumentID { util::parse_be<2>(msg, 1) },
-                         .type = static_cast<uint8_t>(msg[0]) };
+                         .type = Type::Replace };
 }
 
 OrderAction parse_do_nothing([[maybe_unused]] std::span<const std::byte>) { return {}; }

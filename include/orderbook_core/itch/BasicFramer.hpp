@@ -34,7 +34,7 @@ public:
                 return;
             }
             auto val = parse(bytes.subspan(pos + 2, len));
-            other(val);
+            other(val.value());
             pos += 2 + len;
         }
     }

@@ -1,8 +1,6 @@
 #pragma once
 #include "orderbook_core/Types.hpp"
 
-#include <variant>
-
 namespace rushevich {
 // An order type that refers to any possible order
 struct OrderAction {
@@ -12,12 +10,8 @@ struct OrderAction {
     Quantity qty {};        // Used in add, execute, cancel, and replace
     InstrumentID locate {}; // Used ubiquitously
     Side side {};           // Used in order add
-    uint8_t type {};
+    Type type {};
 };
 struct DoNothing {};
-
-// Action can be one of the defined orders
-// using Action
-//     = std::variant<OrderAdd, OrderExecute, OrderCancel, OrderDelete, OrderReplace, DoNothing>;
 
 } // namespace rushevich
