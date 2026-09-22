@@ -53,8 +53,8 @@ public:
     void _replaceOrder(const OrderAction& action);
 
     // Helper for deducing the right side inline
-    __attribute__((always_inline)) auto& _sideMap(Side side) {
-        return side == Side::buy ? _buySide : _sellSide;
+    __attribute__((always_inline)) auto& _sideMap(bool isBid) {
+        return isBid ? _buySide : _sellSide;
     }
 
 private:

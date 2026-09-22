@@ -16,7 +16,8 @@ namespace rushevich::book {
 using containers::IntrusiveNode;
 void OrderBook::_addOrder(const OrderAction& action) {
     const auto& [oid, _1_, price, qty, loc, side, _2_] = action;
-    auto& sideMap = _sideMap(side);
+    const auto bid = side == Side::buy;
+    auto& sideMap = _sideMap(bid);
 
     // Default allocate a new order
     auto* orderMeta = _orderPool.allocate();
@@ -29,7 +30,7 @@ void OrderBook::_addOrder(const OrderAction& action) {
     orderMeta->qty = qty.value();
     orderMeta->priceTick = price.value();
     orderMeta->locateIdx = loc.value();
-    orderMeta->isBid = true;
+    orderMeta->isBid = bid;
     _linkToPrice(orderMeta, sideMap[orderMeta->priceTick]); // Handles priceLevel.volume increment
     _oidMetaMap[oid.value()] = orderMeta;
 }
@@ -41,7 +42,7 @@ void OrderBook::_execOrCancelOrder(const OrderAction& action) {
 
     auto* orderMeta = orderMetaIterator->second;
     assert(orderMeta != nullptr);
-    auto& sideMap = _sideMap(side);
+    auto& sideMap = _sideMap(orderMeta->isBid);
 
     // Case: we have to remove the order entirely from the book:
     if ((orderMeta->qty - qty.value()) == 0) {
@@ -61,7 +62,7 @@ void OrderBook::_deleteOrder(const OrderAction& action) {
 
     auto* orderMeta = orderMetaIterator->second;
     assert(orderMeta != nullptr);
-    auto& sideMap = _sideMap(side);
+    auto& sideMap = _sideMap(orderMeta->isBid);
 
     _unlinkOrder(orderMeta, sideMap[orderMeta->priceTick]);
     _oidMetaMap.erase(orderMetaIterator);
@@ -75,7 +76,7 @@ void OrderBook::_replaceOrder(const OrderAction& action) {
 
     auto* orderMeta = orderMetaIterator->second;
     assert(orderMeta != nullptr);
-    auto& sideMap = _sideMap(side);
+    auto& sideMap = _sideMap(orderMeta->isBid);
 
     _oidMetaMap.erase(orderMetaIterator);
     _unlinkOrder(orderMeta, sideMap[orderMeta->priceTick]);
@@ -87,27 +88,23 @@ void OrderBook::_replaceOrder(const OrderAction& action) {
 }
 
 void OrderBook::_unlinkOrder(OrderMeta* orderMeta, PriceLevel& priceLevel) {
-    // - if orderHandle was head, set head to orderHandle->next
-    // - if orderHandle was tail, set tail to orderHandle->prev
-    // - link its prev and next if they are not nullptr
-    // - we erase it from the oid map
-    // - we erase it from our object pool
-
     priceLevel.volume -= orderMeta->qty;
     // If it is head, we have to bump head up
     if (orderMeta == priceLevel.headHandle) {
         priceLevel.headHandle = orderMeta->nextHandle;
     } else { // This means it’s within the list or a tail, in which case
-        assert(orderMeta->prevHandle != nullptr);
+        assert(orderMeta->prevHandle != IntrusiveNode<OrderMeta*>::NULL_HANDLE);
         orderMeta->prevHandle->nextHandle = orderMeta->nextHandle;
     }
     // If it is tail, we have to move tail back one
     if (orderMeta == priceLevel.tailHandle) { // Also means that next should be null
         priceLevel.tailHandle = orderMeta->prevHandle;
     } else {
-        assert(orderMeta->nextHandle != nullptr);
+        assert(orderMeta->nextHandle != IntrusiveNode<OrderMeta*>::NULL_HANDLE);
         orderMeta->nextHandle->prevHandle = orderMeta->prevHandle;
     }
+    orderMeta->prevHandle = IntrusiveNode<OrderMeta*>::NULL_HANDLE;
+    orderMeta->nextHandle = IntrusiveNode<OrderMeta*>::NULL_HANDLE;
 }
 
 void OrderBook::_linkToPrice(OrderMeta* orderMeta, PriceLevel& priceLevel) {
