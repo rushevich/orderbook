@@ -7,36 +7,28 @@
 
 namespace rushevich::book {
 using namespace containers;
-class OrderBook {
+namespace detail {
+static constexpr auto DEFAULT_TICK_COUNT = 6000UZ;
+
+}; // namespace detail
+template <size_t PoolSize> class OrderBook {
 public:
-    // Pessimistic defaults
-    static constexpr auto DEFAULT_TICK_COUNT = 6000UZ;
-    static constexpr auto DEFAULT_ORDER_COUNT = 10'000'000UZ;
-
-    OrderBook(ObjectPool<OrderMeta, DEFAULT_ORDER_COUNT>& orderPool,
-              std::unordered_map<uint64_t, OrderMeta*> oidMetaMap)
-        : _orderPool { orderPool },
-          _oidMetaMap { oidMetaMap },
-          _buySide(DEFAULT_TICK_COUNT),
-          _sellSide(DEFAULT_TICK_COUNT) {}
-
-private:
-    // Storage for all the orders within the system. Passed in by the orderbook orchestrator on
-    // construction.
-    ObjectPool<OrderMeta, DEFAULT_ORDER_COUNT>& _orderPool;
     // Maps OrderID to the index within the object pool. Chose to use indices instead of pointers
     // for size reduction purposes. To get the data, simply operator[] with the value
     // It is static because this map is shared across all instruments
     using OidMetaMap = std::unordered_map<uint64_t, OrderMeta*>;
-    OidMetaMap& _oidMetaMap;
 
     // This is less than ideal, but for now can serve as a naive implementation. Ultimately, the
     // best design might be a ring-buffer that can handle price volatility
     using SideMap = std::unordered_map<uint32_t, PriceLevel>;
-    SideMap _buySide;
-    SideMap _sellSide;
 
-public:
+    OrderBook(ObjectPool<OrderMeta, PoolSize>& orderPool,
+              std::unordered_map<uint64_t, OrderMeta*> oidMetaMap)
+        : _orderPool { orderPool },
+          _oidMetaMap { oidMetaMap },
+          _buySide(detail::DEFAULT_TICK_COUNT),
+          _sellSide(detail::DEFAULT_TICK_COUNT) {}
+
     // allocates a new order within the system-wide ’_orderPool’ and ’_oidMetaMap’ structures and
     // then calls ’_linkToPrice()’
     void _addOrder(const OrderAction& action);
@@ -57,7 +49,23 @@ public:
         return isBid ? _buySide : _sellSide;
     }
 
+    OrderBook(const OrderBook&) = delete;
+    OrderBook(OrderBook&&) = delete;
+
+    OrderBook& operator=(const OrderBook&) = delete;
+    OrderBook& operator=(OrderBook&&) = delete;
+
+    ~OrderBook() = default;
+
 private:
+    // Storage for all the orders within the system. Passed in by the orderbook orchestrator on
+    // construction.
+    ObjectPool<OrderMeta, PoolSize>& _orderPool;
+    OidMetaMap& _oidMetaMap;
+
+    SideMap _buySide;
+    SideMap _sellSide;
+
     // Slashes the links between the order and the other order’s in its pricelevel.
     // Also handles reduction in quantity from the corresponding PriceLevel’s volume field.
     void _unlinkOrder(OrderMeta* orderMeta, PriceLevel& priceLevel);
@@ -66,5 +74,10 @@ private:
     // Also handles increase in quantity to the corresponding PriceLevel’s volume field.
     void _linkToPrice(OrderMeta* orderMeta, PriceLevel& priceLevel);
 };
+
+// Deduction guide
+template <size_t PoolSize>
+OrderBook(ObjectPool<OrderMeta, PoolSize>& pool, std::unordered_map<uint64_t, OrderMeta*>& map)
+    -> OrderBook<PoolSize>;
 
 } // namespace rushevich::book

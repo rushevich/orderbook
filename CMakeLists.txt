@@ -59,6 +59,7 @@ if(ORDERBOOK_BUILD_TESTS)
   add_executable(orderbook_tests
     tests/test.cpp
     tests/containers/ObjectPool.cpp
+    tests/book/OrderBook.cpp
   )
   target_link_libraries(orderbook_tests
     PRIVATE orderbook_core orderbook_warnings GTest::gtest_main)
