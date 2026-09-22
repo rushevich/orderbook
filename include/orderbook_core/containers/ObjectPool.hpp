@@ -61,26 +61,6 @@ public:
         return allocation;
     }
 
-    // Returns an index to the object created using the supplied ’Args&&... args’ or an illogical
-    // value if the pool is out of slots
-    template <typename I, typename... Args>
-        requires std::integral<I>
-    [[nodiscard]] I allocate(Args&&... args) {
-        T* allocation { nullptr };
-        if (_freeHead != nullptr) {
-            allocation = reinterpret_cast<T*>(_freeHead);
-            _freeHead = _freeHead->nextFree;
-            T_ATraits::construct(_T_Allocator, allocation, std::forward<Args>(args)...);
-        } else if (_bumpIndex < Capacity) {
-            allocation = reinterpret_cast<T*>(_pool + _bumpIndex++);
-            T_ATraits::construct(_T_Allocator, allocation, std::forward<Args>(args)...);
-        } else {
-            return static_cast<I>(-1);
-        }
-        _remaining--;
-        return allocation - _pool;
-    }
-
     // ’ptr’ is invalidated (set to nullptr)
     void free(T*& ptr) {
         assert(ptr != nullptr);
@@ -90,24 +70,6 @@ public:
         _freeHead = node;
         ptr = nullptr;
         _remaining++;
-    }
-
-    // ’index’ is invalidated
-    template <typename I> void free(I& index) {
-        assert(index != static_cast<IType>(-1));
-        T_ATraits::destroy(_T_Allocator, _pool + index);
-        Node* node = reinterpret_cast<Node*>(_pool + index);
-        node->nextFree = _freeHead;
-        _freeHead = node;
-        index = static_cast<I>(-1);
-        _remaining++;
-    }
-
-    template <typename I>
-        requires std::integral<I>
-    T& operator[](I index) noexcept {
-        assert(index >= 0 && index < Capacity);
-        _pool[index];
     }
 
     [[nodiscard]] size_t remaining() const { return _remaining; }

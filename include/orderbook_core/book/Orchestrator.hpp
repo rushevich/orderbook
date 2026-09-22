@@ -10,7 +10,7 @@ namespace rushevich::book {
 // ’Orchestrates’ OrderBook objects -- owns an array of OrderBooks and the object pools and
 // global orderId map that they use
 namespace detail {
-inline constexpr auto NUM_SYMBOLS = 5'000UZ;
+inline constexpr auto NUM_SYMBOLS = 10'000UZ;
 inline constexpr auto ORDER_POOL_SIZE = 10'000'000UZ;
 } // namespace detail
 class Orchestrator {
