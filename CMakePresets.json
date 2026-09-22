@@ -6,31 +6,36 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": { "ORDERBOOK_BUILD_TESTS": "ON" }
     },
+    {
+      "name": "san-base", "hidden": true, "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ORDERBOOK_BUILD_BENCHMARKS": "OFF" }
+    },
     { "name": "debug", "inherits": "base",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" } },
     { "name": "release", "inherits": "base",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo", "ORDERBOOK_BUILD_BENCHMARKS": "ON" } },
-    { "name": "asan", "inherits": "base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ORDERBOOK_SANITIZER": "address" } },
-    { "name": "ubsan", "inherits": "base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ORDERBOOK_SANITIZER": "undefined" } },
-    { "name": "tsan", "inherits": "base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ORDERBOOK_SANITIZER": "thread" } }
+    { "name": "asan", "inherits": "san-base",
+      "cacheVariables": { "ORDERBOOK_SANITIZER": "address;undefined" } },
+    { "name": "asan-fast", "inherits": "asan",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" } },
+    { "name": "ubsan", "inherits": "san-base",
+      "cacheVariables": { "ORDERBOOK_SANITIZER": "undefined" } },
+    { "name": "tsan", "inherits": "san-base",
+      "cacheVariables": { "ORDERBOOK_SANITIZER": "thread" } }
   ],
   "buildPresets": [
     { "name": "debug", "configurePreset": "debug" },
     { "name": "release", "configurePreset": "release" },
     { "name": "asan", "configurePreset": "asan" },
+    { "name": "asan-fast", "configurePreset": "asan-fast" },
     { "name": "ubsan", "configurePreset": "ubsan" },
     { "name": "tsan", "configurePreset": "tsan" }
   ],
   "testPresets": [
     { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } },
-    { "name": "asan", "configurePreset": "asan", "output": { "outputOnFailure": true },
-      "environment": { "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:strict_string_checks=1" } },
-    { "name": "ubsan", "configurePreset": "ubsan", "output": { "outputOnFailure": true },
-      "environment": { "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1" } },
-    { "name": "tsan", "configurePreset": "tsan", "output": { "outputOnFailure": true },
-      "environment": { "TSAN_OPTIONS": "halt_on_error=1:second_deadlock_stack=1" } }
+    { "name": "asan", "configurePreset": "asan", "output": { "outputOnFailure": true } },
+    { "name": "asan-fast", "configurePreset": "asan-fast", "inherits": "asan" },
+    { "name": "ubsan", "configurePreset": "ubsan", "output": { "outputOnFailure": true }},
+    { "name": "tsan", "configurePreset": "tsan", "output": { "outputOnFailure": true }}
   ]
 }

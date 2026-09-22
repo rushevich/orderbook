@@ -35,6 +35,7 @@
               ++ (with pkgs; [
                 clang-tools
                 gdb
+                llvm
               ])
               ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
                 pkgs.linuxPackages_latest.perf

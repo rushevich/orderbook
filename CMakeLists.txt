@@ -20,7 +20,9 @@ if(ORDERBOOK_SANITIZER)
     message(FATAL_ERROR "TSan cannot be combined with ASan")
   endif()
   list(JOIN ORDERBOOK_SANITIZER "," _orderbook_san)
-  add_compile_options(-fsanitize=${_orderbook_san} -fno-omit-frame-pointer -g -O1)
+  add_compile_options(-fsanitize=${_orderbook_san}
+                      -fno-omit-frame-pointer
+                      -fno-optimize-sibling-calls)
   add_link_options(-fsanitize=${_orderbook_san})
   if("undefined" IN_LIST ORDERBOOK_SANITIZER)
     add_compile_options(-fno-sanitize-recover=all)
@@ -60,14 +62,15 @@ if(ORDERBOOK_BUILD_TESTS)
     tests/test.cpp
     tests/containers/ObjectPool.cpp
     tests/book/OrderBook.cpp
+    src/book/OrderBook.cpp
+    src/book/Orchestrator.cpp
   )
   target_link_libraries(orderbook_tests
     PRIVATE orderbook_core orderbook_warnings GTest::gtest_main)
-  gtest_discover_tests(orderbook_tests)
   target_compile_definitions(orderbook_tests PRIVATE
-  ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
+    ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
+  gtest_discover_tests(orderbook_tests DISCOVERY_MODE PRE_TEST)
 endif()
-
 
 # ---------- Benchmarks ----------
 if(ORDERBOOK_BUILD_BENCHMARKS)
