@@ -59,14 +59,8 @@ struct PriceLevel {
 
 } // namespace rushevich
 
-template <> struct std::hash<rushevich::OrderID> {
-    constexpr size_t operator()(const rushevich::OrderID& oid) const noexcept {
-        return std::hash<uint64_t> {}(oid.value());
-    }
-};
-
-template <> struct std::hash<rushevich::Price> {
-    size_t operator()(const rushevich::Price& price) const noexcept {
-        return std::hash<uint32_t> {}(price.value());
+template <typename T, typename Tag> struct std::hash<rushevich::StrongInt<T, Tag>> {
+    size_t operator()(const rushevich::StrongInt<T, Tag>& val) const noexcept {
+        return std::hash<T> {}(val.value());
     }
 };

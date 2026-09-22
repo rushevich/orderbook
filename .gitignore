@@ -4,3 +4,4 @@ Testing
 compile_commands.json 
 /.direnv/
 NOADD*
+/perf.data
