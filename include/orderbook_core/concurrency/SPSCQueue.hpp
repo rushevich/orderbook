@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace rushevich {
+namespace rushevich::concurrency {
 
 // A fixed-size, lock-free single-producer single-consumer queue implemented as a ring buffer
 // Inspired by rigtorp’s SPSC queue implementation (but still written by me)
@@ -130,4 +130,4 @@ private:
     static constexpr auto acquire = std::memory_order_acquire;
     static constexpr auto release = std::memory_order_release;
 };
-} // namespace rushevich
+} // namespace rushevich::concurrency

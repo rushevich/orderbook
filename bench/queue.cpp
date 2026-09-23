@@ -30,7 +30,7 @@ inline __attribute__((always_inline)) void DoNotOptimize(auto& value) {
 } // namespace
 
 static void throughput_bench() {
-    using namespace rushevich;
+    using rushevich::concurrency::SPSCQueue;
     SPSCQueue<long long> queue(q_sz);
     std::thread consumer { [&queue] {
         pinThread(0);

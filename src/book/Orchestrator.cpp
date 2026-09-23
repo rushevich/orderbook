@@ -3,6 +3,7 @@
 #include "orderbook_core/Actions.hpp"
 #include "orderbook_core/Types.hpp"
 
+#include <print>
 #include <utility>
 
 namespace rushevich::book {
@@ -26,6 +27,7 @@ bool Orchestrator::consume(const OrderAction& action) {
 bool Orchestrator::_onAdd(const OrderAction& action) {
     auto* orderMeta = _pool.allocate();
     if (orderMeta == nullptr) {
+        std::println("[ERROR] Failed to allocate order: OOM");
         return false;
     }
     orderMeta->oid = action.oid;
@@ -42,6 +44,7 @@ bool Orchestrator::_onAdd(const OrderAction& action) {
 bool Orchestrator::_onExecute(const OrderAction& action) {
     auto* orderMeta = _oidMetaMap[action.oid];
     if (orderMeta == nullptr) {
+        std::println("[ERROR] Order not found.");
         return false;
     }
     auto& book = _bookFor(action.locate);
@@ -58,6 +61,7 @@ bool Orchestrator::_onExecute(const OrderAction& action) {
 bool Orchestrator::_onCancel(const OrderAction& action) {
     auto* orderMeta = _oidMetaMap[action.oid];
     if (orderMeta == nullptr) {
+        std::println("[ERROR] Order not found.");
         return false;
     }
     auto& book = _bookFor(action.locate);
@@ -74,6 +78,7 @@ bool Orchestrator::_onCancel(const OrderAction& action) {
 bool Orchestrator::_onDelete(const OrderAction& action) {
     auto* orderMeta = _oidMetaMap[action.oid];
     if (orderMeta == nullptr) {
+        std::println("[ERROR] Order not found.");
         return false;
     }
     auto& book = _bookFor(action.locate);
@@ -86,6 +91,7 @@ bool Orchestrator::_onDelete(const OrderAction& action) {
 bool Orchestrator::_onReplace(const OrderAction& action) {
     auto* orderMeta = _oidMetaMap[action.oid];
     if (orderMeta == nullptr) {
+        std::println("[ERROR] Order not found.");
         return false;
     }
     auto& book = _bookFor(action.locate);

@@ -47,7 +47,7 @@ target_include_directories(orderbook_core
 target_link_libraries(orderbook_core PRIVATE orderbook_warnings)
 
 # ---------- Executable ----------
-add_executable(orderbook app/main.cpp)
+add_executable(orderbook app/main.cpp src/book/Orchestrator.cpp src/book/OrderBook.cpp)
 target_link_libraries(orderbook PRIVATE orderbook_core orderbook_warnings)
 target_compile_definitions(orderbook PRIVATE
   ITCH_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")

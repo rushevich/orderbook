@@ -1,0 +1,16 @@
+Total count: 63002689
+Order Adds: 27620920
+Order Executes (w/ price): 7252
+Order Deletes: 27391247
+Order Executes: 388092
+Order Adds (MPID): 55078
+Unhandled parsing operation: 8795
+Unhandled parsing operation: 5854
+Unhandled parsing operation: 31172
+Unhandled parsing operation: 8725
+Unhandled parsing operation: 6
+Order Replaces: 5640677
+Unhandled parsing operation: 1
+Order Cancels: 1836021
+Unhandled parsing operation: 8849
+Elapsed time: 6750ms ms
